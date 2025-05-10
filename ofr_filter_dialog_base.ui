@@ -1,0 +1,1224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>888</width>
+    <height>799</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>OFR Filter</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item row="0" column="0">
+    <widget class="QScrollArea" name="scrollArea">
+     <property name="verticalScrollBarPolicy">
+      <enum>Qt::ScrollBarAlwaysOn</enum>
+     </property>
+     <property name="horizontalScrollBarPolicy">
+      <enum>Qt::ScrollBarAlwaysOn</enum>
+     </property>
+     <property name="sizeAdjustPolicy">
+      <enum>QAbstractScrollArea::AdjustToContents</enum>
+     </property>
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="scrollAreaWidgetContents">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>869</width>
+        <height>780</height>
+       </rect>
+      </property>
+      <widget class="QTabWidget" name="tabWidget">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>872</width>
+         <height>782</height>
+        </rect>
+       </property>
+       <property name="currentIndex">
+        <number>1</number>
+       </property>
+       <widget class="QWidget" name="tab_1">
+        <attribute name="title">
+         <string>Daten</string>
+        </attribute>
+        <widget class="QGroupBox" name="groupBox_Daten">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>10</y>
+           <width>680</width>
+           <height>280</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Wählen Sie die Daten aus</string>
+         </property>
+         <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox_Daten">
+          <property name="geometry">
+           <rect>
+            <x>95</x>
+            <y>30</y>
+            <width>500</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="currentIndex">
+           <number>-1</number>
+          </property>
+          <property name="allowEmptyLayer">
+           <bool>true</bool>
+          </property>
+         </widget>
+         <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox_Parzellen">
+          <property name="geometry">
+           <rect>
+            <x>95</x>
+            <y>80</y>
+            <width>500</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="currentIndex">
+           <number>-1</number>
+          </property>
+          <property name="allowEmptyLayer">
+           <bool>true</bool>
+          </property>
+         </widget>
+         <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox_Innenfaelche">
+          <property name="geometry">
+           <rect>
+            <x>95</x>
+            <y>130</y>
+            <width>500</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="currentIndex">
+           <number>-1</number>
+          </property>
+          <property name="allowEmptyLayer">
+           <bool>true</bool>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label">
+          <property name="geometry">
+           <rect>
+            <x>5</x>
+            <y>30</y>
+            <width>85</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Punktdaten:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_2">
+          <property name="geometry">
+           <rect>
+            <x>5</x>
+            <y>80</y>
+            <width>85</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Parzellen:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_3">
+          <property name="geometry">
+           <rect>
+            <x>5</x>
+            <y>130</y>
+            <width>85</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Innenfläche:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pushButton">
+          <property name="geometry">
+           <rect>
+            <x>600</x>
+            <y>30</y>
+            <width>75</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Hinzufügen</string>
+          </property>
+         </widget>
+         <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox_Feldgrenze">
+          <property name="geometry">
+           <rect>
+            <x>95</x>
+            <y>180</y>
+            <width>500</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="currentIndex">
+           <number>-1</number>
+          </property>
+          <property name="allowEmptyLayer">
+           <bool>true</bool>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_4">
+          <property name="geometry">
+           <rect>
+            <x>5</x>
+            <y>180</y>
+            <width>85</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Feldgrenze:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+         <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox_AF">
+          <property name="geometry">
+           <rect>
+            <x>95</x>
+            <y>230</y>
+            <width>500</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="currentIndex">
+           <number>-1</number>
+          </property>
+          <property name="allowEmptyLayer">
+           <bool>true</bool>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_5">
+          <property name="geometry">
+           <rect>
+            <x>5</x>
+            <y>230</y>
+            <width>85</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Ausschlussfläche:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QGroupBox" name="groupBox_Zuschnitt">
+         <property name="geometry">
+          <rect>
+           <x>700</x>
+           <y>10</y>
+           <width>160</width>
+           <height>280</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Datenzuschnitt</string>
+         </property>
+         <widget class="QPushButton" name="cutFB">
+          <property name="geometry">
+           <rect>
+            <x>5</x>
+            <y>130</y>
+            <width>150</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Vorgewende abschneiden</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="cutPlot">
+          <property name="geometry">
+           <rect>
+            <x>5</x>
+            <y>80</y>
+            <width>150</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Auf Parzellen zuschneiden</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="cutPoints">
+          <property name="geometry">
+           <rect>
+            <x>5</x>
+            <y>30</y>
+            <width>150</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Punkte manuell löschen</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="cutFG">
+          <property name="geometry">
+           <rect>
+            <x>5</x>
+            <y>180</y>
+            <width>150</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Auf Feldgrenze zuschneiden</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="cutAF">
+          <property name="geometry">
+           <rect>
+            <x>5</x>
+            <y>230</y>
+            <width>150</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Ausschlussfl. ausschließen</string>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QPushButton" name="exitButton">
+         <property name="geometry">
+          <rect>
+           <x>540</x>
+           <y>710</y>
+           <width>150</width>
+           <height>30</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Abbrechen</string>
+         </property>
+        </widget>
+        <widget class="QGroupBox" name="groupBox_Symbol">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>690</y>
+           <width>351</width>
+           <height>61</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Symbolisierung der Punktdaten anpassen</string>
+         </property>
+         <widget class="QComboBox" name="columnComboBox">
+          <property name="geometry">
+           <rect>
+            <x>60</x>
+            <y>25</y>
+            <width>190</width>
+            <height>30</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="SymbButton">
+          <property name="geometry">
+           <rect>
+            <x>260</x>
+            <y>25</y>
+            <width>75</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Anpassen</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_6">
+          <property name="geometry">
+           <rect>
+            <x>-30</x>
+            <y>25</y>
+            <width>85</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Attribut:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QPushButton" name="WeiterButton">
+         <property name="geometry">
+          <rect>
+           <x>700</x>
+           <y>710</y>
+           <width>150</width>
+           <height>30</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Weiter</string>
+         </property>
+        </widget>
+        <widget class="QWidget" name="mapWidget" native="true">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>290</y>
+           <width>861</width>
+           <height>401</height>
+          </rect>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="tab_2">
+        <attribute name="title">
+         <string>Filter</string>
+        </attribute>
+        <widget class="QGroupBox" name="groupBox_Attribut">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>10</y>
+           <width>301</width>
+           <height>71</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Wählen Sie das Attribut aus, welches gefiltert werden soll.</string>
+         </property>
+         <widget class="QComboBox" name="columnComboBox2">
+          <property name="geometry">
+           <rect>
+            <x>75</x>
+            <y>30</y>
+            <width>190</width>
+            <height>30</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_7">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>30</y>
+            <width>41</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Attribut:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QPushButton" name="exitButton2">
+         <property name="geometry">
+          <rect>
+           <x>540</x>
+           <y>710</y>
+           <width>150</width>
+           <height>30</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Abbrechen</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="BackButton">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>710</y>
+           <width>150</width>
+           <height>30</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Zurück</string>
+         </property>
+        </widget>
+        <widget class="QTabWidget" name="tabWidget_FilterViewer">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>270</y>
+           <width>840</width>
+           <height>431</height>
+          </rect>
+         </property>
+         <property name="currentIndex">
+          <number>1</number>
+         </property>
+         <widget class="QWidget" name="auswahl_tab">
+          <attribute name="title">
+           <string>Auswahl</string>
+          </attribute>
+          <widget class="QTableWidget" name="tableWidget_Auswahl">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>90</y>
+             <width>811</width>
+             <height>221</height>
+            </rect>
+           </property>
+           <property name="editTriggers">
+            <set>QAbstractItemView::NoEditTriggers</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="label_auswahl">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>320</y>
+             <width>280</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+          <widget class="QLabel" name="label_8">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>20</y>
+             <width>811</width>
+             <height>61</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Die Tabelle zeigt, auf wie viele Punkte des Datensatzes das jeweilige Filterkriterium zutrifft. Es ist zu beachten, dass mehrere Filterkriterien auf denselben Punkt zutreffen können. Daher kann die Gesamtanzahl der ausgewählten Punkte deutlich geringer sein als die Summe der in der Tabelle dargestellten Übereinstimmungen.</string>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+          <widget class="QLabel" name="label_9">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>0</y>
+             <width>47</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Info:</string>
+           </property>
+          </widget>
+          <widget class="QLabel" name="label_auswahl_rel">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>350</y>
+             <width>280</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </widget>
+         <widget class="QWidget" name="tab_4">
+          <attribute name="title">
+           <string>Histogramm</string>
+          </attribute>
+          <widget class="QWidget" name="histogramm" native="true">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>30</y>
+             <width>800</width>
+             <height>350</height>
+            </rect>
+           </property>
+          </widget>
+          <widget class="QCheckBox" name="checkBox_hist">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>0</y>
+             <width>121</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Alle Filter anwenden</string>
+           </property>
+           <property name="checked">
+            <bool>false</bool>
+           </property>
+          </widget>
+          <widget class="QLabel" name="raw_stat">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>380</y>
+             <width>400</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+          <widget class="QLabel" name="filter_stat">
+           <property name="geometry">
+            <rect>
+             <x>430</x>
+             <y>380</y>
+             <width>400</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>TextLabel</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </widget>
+         <widget class="QWidget" name="tab_6">
+          <attribute name="title">
+           <string>Karte</string>
+          </attribute>
+          <widget class="QWidget" name="mapWidget2" native="true">
+           <property name="geometry">
+            <rect>
+             <x>-1</x>
+             <y>-1</y>
+             <width>841</width>
+             <height>411</height>
+            </rect>
+           </property>
+          </widget>
+         </widget>
+        </widget>
+        <widget class="QTabWidget" name="tabWidget_Filter">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>90</y>
+           <width>840</width>
+           <height>171</height>
+          </rect>
+         </property>
+         <property name="currentIndex">
+          <number>2</number>
+         </property>
+         <widget class="QWidget" name="tab">
+          <attribute name="title">
+           <string>Unter- und Obergrenze</string>
+          </attribute>
+          <widget class="QGroupBox" name="groupBox_LB">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>5</y>
+             <width>811</width>
+             <height>61</height>
+            </rect>
+           </property>
+           <property name="title">
+            <string>Untergrenze</string>
+           </property>
+           <widget class="QDoubleSpinBox" name="doubleSpinBox_LB">
+            <property name="geometry">
+             <rect>
+              <x>270</x>
+              <y>25</y>
+              <width>70</width>
+              <height>30</height>
+             </rect>
+            </property>
+            <property name="minimum">
+             <double>-99999999.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>99999999.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+           </widget>
+           <widget class="QLabel" name="Attribut_label">
+            <property name="geometry">
+             <rect>
+              <x>5</x>
+              <y>25</y>
+              <width>190</width>
+              <height>30</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+           <widget class="QComboBox" name="comboBox_LB">
+            <property name="geometry">
+             <rect>
+              <x>210</x>
+              <y>25</y>
+              <width>50</width>
+              <height>30</height>
+             </rect>
+            </property>
+           </widget>
+           <widget class="QPushButton" name="untergrenze">
+            <property name="geometry">
+             <rect>
+              <x>350</x>
+              <y>25</y>
+              <width>80</width>
+              <height>30</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Anwenden</string>
+            </property>
+           </widget>
+           <widget class="QLabel" name="count_LB_label">
+            <property name="geometry">
+             <rect>
+              <x>450</x>
+              <y>25</y>
+              <width>260</width>
+              <height>30</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+           <widget class="QPushButton" name="untergrenze_reset">
+            <property name="geometry">
+             <rect>
+              <x>720</x>
+              <y>25</y>
+              <width>80</width>
+              <height>30</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Zurücksetzen</string>
+            </property>
+           </widget>
+          </widget>
+          <widget class="QGroupBox" name="groupBox_UB">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>70</y>
+             <width>811</width>
+             <height>60</height>
+            </rect>
+           </property>
+           <property name="title">
+            <string>Obergrenze</string>
+           </property>
+           <widget class="QPushButton" name="obergrenze_reset">
+            <property name="geometry">
+             <rect>
+              <x>720</x>
+              <y>25</y>
+              <width>80</width>
+              <height>30</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Zurücksetzen</string>
+            </property>
+           </widget>
+           <widget class="QLabel" name="Attribut_label1">
+            <property name="geometry">
+             <rect>
+              <x>5</x>
+              <y>25</y>
+              <width>190</width>
+              <height>30</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+           <widget class="QComboBox" name="comboBox_UB">
+            <property name="geometry">
+             <rect>
+              <x>210</x>
+              <y>25</y>
+              <width>50</width>
+              <height>30</height>
+             </rect>
+            </property>
+           </widget>
+           <widget class="QDoubleSpinBox" name="doubleSpinBox_UB">
+            <property name="geometry">
+             <rect>
+              <x>270</x>
+              <y>25</y>
+              <width>70</width>
+              <height>30</height>
+             </rect>
+            </property>
+            <property name="minimum">
+             <double>-99999999.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>99999999.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+           </widget>
+           <widget class="QPushButton" name="obergrenze">
+            <property name="geometry">
+             <rect>
+              <x>350</x>
+              <y>25</y>
+              <width>80</width>
+              <height>30</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Anwenden</string>
+            </property>
+           </widget>
+           <widget class="QLabel" name="count_UB_label">
+            <property name="geometry">
+             <rect>
+              <x>450</x>
+              <y>25</y>
+              <width>260</width>
+              <height>30</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </widget>
+         </widget>
+         <widget class="QWidget" name="tab_5">
+          <attribute name="title">
+           <string>Standardabweichung</string>
+          </attribute>
+          <widget class="QCheckBox" name="checkBox_SD">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>45</y>
+             <width>371</width>
+             <height>18</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Standardabweichung auf Basis der bereits gefilterten Daten berechnen</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+          <widget class="QDoubleSpinBox" name="doubleSpinBox_SD">
+           <property name="geometry">
+            <rect>
+             <x>90</x>
+             <y>70</y>
+             <width>70</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="singleStep">
+            <double>0.100000000000000</double>
+           </property>
+           <property name="value">
+            <double>2.000000000000000</double>
+           </property>
+          </widget>
+          <widget class="QLabel" name="label_10">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>70</y>
+             <width>70</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Multiplikator</string>
+           </property>
+          </widget>
+          <widget class="QLabel" name="label_11">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>110</y>
+             <width>70</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Methode</string>
+           </property>
+          </widget>
+          <widget class="QComboBox" name="comboBox_sd">
+           <property name="geometry">
+            <rect>
+             <x>90</x>
+             <y>110</y>
+             <width>221</width>
+             <height>30</height>
+            </rect>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="pushButton_SD">
+           <property name="geometry">
+            <rect>
+             <x>350</x>
+             <y>110</y>
+             <width>80</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Anwenden</string>
+           </property>
+          </widget>
+          <widget class="QLabel" name="count_SD_label">
+           <property name="geometry">
+            <rect>
+             <x>450</x>
+             <y>110</y>
+             <width>211</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="pushButton_SD_reset">
+           <property name="geometry">
+            <rect>
+             <x>670</x>
+             <y>110</y>
+             <width>80</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Zurücksetzen</string>
+           </property>
+          </widget>
+          <widget class="QLabel" name="Beschreibung_SD">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>5</y>
+             <width>811</width>
+             <height>31</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Setzen Sie eine Ober- und/oder Untergrenze als Mittelwert ± (Multiplikator x Standardabweichung). Die Kennwerte (Mittelwert und Standardabweichung) können dabei entweder aus den ungefilterten Rohdaten oder aus den durch vorherige Filter modifizierten Daten berechnet werden.</string>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </widget>
+         <widget class="QWidget" name="tab_7">
+          <attribute name="title">
+           <string>Überlappung</string>
+          </attribute>
+          <widget class="QPushButton" name="pushButton_start_overlap">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>10</y>
+             <width>75</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Start</string>
+           </property>
+          </widget>
+         </widget>
+        </widget>
+        <widget class="QPushButton" name="resetButton">
+         <property name="geometry">
+          <rect>
+           <x>380</x>
+           <y>710</y>
+           <width>150</width>
+           <height>30</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Auswahl zurücksetzen</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="WeiterButton2">
+         <property name="geometry">
+          <rect>
+           <x>700</x>
+           <y>710</y>
+           <width>150</width>
+           <height>30</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Abschließen und weiter</string>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="tab_3">
+        <attribute name="title">
+         <string>Attribute anfügen</string>
+        </attribute>
+        <widget class="QPushButton" name="pushButton_Beenden">
+         <property name="geometry">
+          <rect>
+           <x>730</x>
+           <y>720</y>
+           <width>121</width>
+           <height>30</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Beenden</string>
+         </property>
+        </widget>
+        <widget class="QGroupBox" name="groupBox_Parzellenattribute">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>20</y>
+           <width>840</width>
+           <height>141</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Parzellenattribute anfügen</string>
+         </property>
+         <widget class="QPushButton" name="pushButton_Attribute">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>100</y>
+            <width>131</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Attribute übertragen</string>
+          </property>
+         </widget>
+         <widget class="QgsCheckableComboBox" name="mComboBox_Plots">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>60</y>
+            <width>481</width>
+            <height>30</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_12">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>30</y>
+            <width>491</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Wählen Sie die Attribute des Parzellen-Layer aus, die Sie an den Punktdatensatz übertragen wollen:</string>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QGroupBox" name="groupBox_Attribute_manuell">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>220</y>
+           <width>840</width>
+           <height>201</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Attribute manuell einfügen</string>
+         </property>
+         <widget class="QComboBox" name="columnComboBox_Attribute">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>50</y>
+            <width>221</width>
+            <height>30</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_13">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>20</y>
+            <width>81</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Attribut wählen:</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pushButton_Auswahl_Attribut">
+          <property name="geometry">
+           <rect>
+            <x>270</x>
+            <y>50</y>
+            <width>131</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Punkte auswählen</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_15">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>110</y>
+            <width>481</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Sofern noch keine Spalte für das gewünschte Attribut existert, können Sie die Spalte hier anlegen:</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_14">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>130</y>
+            <width>131</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Attributname eingeben:</string>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="lineEdit">
+          <property name="geometry">
+           <rect>
+            <x>30</x>
+            <y>160</y>
+            <width>191</width>
+            <height>30</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pushButton_Attribut_name">
+          <property name="geometry">
+           <rect>
+            <x>230</x>
+            <y>160</y>
+            <width>91</width>
+            <height>30</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Spalte anlegen</string>
+          </property>
+         </widget>
+        </widget>
+       </widget>
+      </widget>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QgsCheckableComboBox</class>
+   <extends>QComboBox</extends>
+   <header>qgscheckablecombobox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QgsMapLayerComboBox</class>
+   <extends>QComboBox</extends>
+   <header>qgsmaplayercombobox.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
