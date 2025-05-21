@@ -27,7 +27,7 @@ import pandas as pd
 
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
-from qgis.core import QgsProject, QgsVectorLayer, QgsWkbTypes, QgsVectorFileWriter, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsRasterLayer, QgsProviderRegistry, QgsPointXY, QgsRectangle
+from qgis.core import QgsProject, QgsVectorLayer, QgsWkbTypes, QgsVectorFileWriter, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsRasterLayer, QgsProviderRegistry, QgsPointXY, QgsRectangle, QgsField
 from qgis.gui import QgsMapCanvas, QgsMapToolPan, QgsMapToolZoom
 from qgis.PyQt.QtWidgets import QVBoxLayout
 from qgis.PyQt.QtWidgets import QMessageBox
@@ -67,6 +67,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         self.cutFB.clicked.connect(self.on_Vorgewende_abschneiden_clicked)
         self.cutPlot.clicked.connect(self.on_auf_Parzellen_zuschneiden_clicked)
         self.cutPoints.clicked.connect(self.on_polygon_selection_clicked)
+        self.pushButton_Auswahl_Attribut.clicked.connect(self.on_point_selection_clicked)
         self.cutAF.clicked.connect(self.on_af_ausschliessen_clicked)
         self.exitButton.clicked.connect(self.on_exit_button_clicked)
         self.SymbButton.clicked.connect(self.on_SymbButton_clicked)
@@ -83,7 +84,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         self.pushButton_Beenden.clicked.connect(self.on_exit_button_clicked)
         self.WeiterButton2.clicked.connect(self.on_weiter_button_2_clicked)
         self.resetButton.clicked.connect(self.reset_filters)
-
+        self.pushButton_Attribut_anlegen.clicked.connect(self.on_attribut_anlegen_clicked)
         
         # Deaktivieren der ComboBoxen beim Start
         self.mMapLayerComboBox_Parzellen.setEnabled(False)
@@ -138,8 +139,13 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
 
     ################################
     ### Daten laden, prüfen usw. ###
-    ################################
-        
+    ################################        
+
+    def testPush(self):
+        text = str(self.mMapLayerComboBox_Daten.currentLayer())
+        QMessageBox.information(self, "Info", text)
+            
+
     def on_combobox_changed(self):
         self.validate_and_update_buttons()
         self.fill_map_widget_zuschneiden()
@@ -247,6 +253,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Entferne alle existierenden Einträge in der ComboBox
         self.columnComboBox.clear()
         self.columnComboBox2.clear()
+        self.columnComboBox_Attribute.clear()
 
         # Hole die Feldnamen (Spaltennamen) des Layers
         fields = new_layer.fields()
@@ -259,6 +266,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             if field.type() in (QVariant.Int, QVariant.Double, QVariant.LongLong, QVariant.UInt, QVariant.ULongLong):
                 self.columnComboBox.addItem(field.name())
                 self.columnComboBox2.addItem(field.name())
+            self.columnComboBox_Attribute.addItem(field.name())
             
     def on_SymbButton_clicked(self):
         if not self.columnComboBox.currentText() is None:
@@ -1036,7 +1044,6 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             else:
                 self.close()
                 
-        self.columnComboBox_Attribute.clear()
                         
     def on_attribut_button_clicked(self):
         # Prüfen ob Attribute ausgewählt wurden
@@ -1088,9 +1095,36 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                     
         else:
             self.close()
-    
-    
-    
+
+    def on_point_selection_clicked(self):
+        self.showMinimized()        
+        self.plugin_instance.point_selection(self.new_layer)
+
+    # Bug: Wenn Spaltenname "Testattribut" angegeben wird -> Feld existiert nicht -> Herausfinden
+    def on_attribut_anlegen_clicked(self):
+        # Prüfen ob Attribute ausgewählt wurden
+        attribut = self.lineEdit.text()
+        self.neues_feld_anlegen(self.new_layer, attribut)
+
+    def neues_feld_anlegen(self, new_layer, attribut):
+        # Prüfen, ob Feld schon existiert
+        if attribut in [f.name() for f in new_layer.fields()]:
+            QMessageBox.warning(self, "Bereits vorhanden!", "Das eingegebene Attribut existiert bereits. Bitte " \
+            "wählen Sie einen anderen Namen.")
+            return
+        
+        if not self.new_layer.isEditable():
+            self.new_layer.startEditing()
+
+        # Neues Attribut hinzufügen
+        if self.new_layer.dataProvider().addAttributes([QgsField(attribut, QVariant.String)]):
+            self.new_layer.updateFields()
+            QMessageBox.information(self, "Erfolg", "Attribut erfolgreich angelegt.")
+            self.columnComboBox_Attribute.addItem(attribut)
+            self.columnComboBox_Attribute.setCurrentText(attribut)
+        else:
+            QMessageBox.warning(self, "Fehler", "Das Attribut konnte nicht angelegt werden.")
+            return    
     
     #########################
     ### Weiter und Zurück ###
@@ -1229,8 +1263,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             self.label_auswahl.setText("keine Filter angewand")
             self.label_auswahl_rel.setText("")
             self.reset_spinboxes()
-            self.plugin_instance.punktauswahl_gesamt = []
-                    
+            self.plugin_instance.punktauswahl_gesamt = []                    
             self.fill_map_widget_zuschneiden()
         
     ###############
@@ -1283,6 +1316,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 self.mMapLayerComboBox_AF.setCurrentIndex(-1)
                 self.columnComboBox.clear()
                 self.columnComboBox2.clear() # neu
+                self.columnComboBox_Attribute.clear()
                 self.cutFG.setEnabled(False)
                 self.cutFB.setEnabled(False)
                 self.cutPlot.setEnabled(False)
@@ -1307,6 +1341,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 self.pushButton.setEnabled(True)
                 self.mComboBox_Plots.clear()
                 self.mComboBox_Plots.setEnabled(False)
+                
                 # Entferne den Hintergrundlayer, falls er existiert
                 try:
                     if hasattr(self, 'background_layer') and self.background_layer.isValid():
@@ -1352,6 +1387,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 self.mMapLayerComboBox_AF.setCurrentIndex(-1)
                 self.columnComboBox.clear()
                 self.columnComboBox2.clear() # neu
+                self.columnComboBox_Attribute.clear()
                 self.cutFG.setEnabled(False)
                 self.cutFB.setEnabled(False)
                 self.cutPlot.setEnabled(False)

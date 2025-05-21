@@ -1252,9 +1252,108 @@ class OFRFilter:
             else:
                 self.dlg.close()
   
+    def point_selection(self, new_layer):
+        """Aktiviert das eingebaute Werkzeug 'Objekte über Polygon wählen' und zeigt ein 
+        nicht-modales Dialogfenster zur Bestätigung an."""
 
-        
-    
+        # Den Layer "new_layer" aktivieren/auswählen
+        iface.setActiveLayer(new_layer)
+
+        # Werkzeug "Objekte über Polygon auswählen" aktivieren
+        iface.actionSelectPolygon().trigger()
+
+        # Nicht-modales Dialogfenster zur Bestätigung anzeigen
+        dialog = QDialog()
+        dialog.setWindowTitle("Auswahl bestätigen")
+
+        layout = QVBoxLayout()
+
+        label = QLabel("Zeichnen Sie mehrere Polygone, um Punkte auszuwählen. Klicken Sie " \
+        "auf 'Auswahl beenden', wenn Sie fertig sind.")
+        layout.addWidget(label)
+
+        confirm_button = QPushButton("Auswahl beenden")
+
+        confirm_button.clicked.connect(lambda: self.point_confirm_selection(dialog, new_layer))
+        layout.addWidget(confirm_button)
+
+        dialog.setLayout(layout)
+
+        # Setze das Dialogfenster permanent in den Vordergrund
+        dialog.setWindowFlag(Qt.WindowStaysOnTopHint)
+
+        # dialog.setModal(False)  # Setze den Dialog als nicht-modal
+        dialog.show()
+
+        # # Speichern der IDs der aktuell ausgewählten Features
+        self.existing_selection = set(new_layer.selectedFeatureIds())
+
+        # # Hinzufügen einer Schaltfläche zum Hinzufügen zur Auswahl
+        add_to_selection_button = QPushButton("Zur Auswahl hinzufügen")
+        add_to_selection_button.clicked.connect(lambda: self.add_to_selection(new_layer))
+        layout.addWidget(add_to_selection_button)
+
+    # Attribut von Parzelle zu Ertrag -> Combobox aktualisieren
+    def point_confirm_selection(self, dialog, new_layer):
+        """Bestätigt die Auswahl, zeigt die Anzahl der ausgewählten Punkte an und fragt, 
+        für welches Attribute die Werte überschrieben/bearbeitet werden sollen."""
+        selected_features = new_layer.selectedFeatures()
+
+        if selected_features:
+            count = len(selected_features)
+            total_points = new_layer.featureCount()  # Gesamtanzahl der Punkte im Layer
+
+            # Überprüfe, ob alle Punkte ausgewählt wurden
+            if count == total_points:
+                reply = QMessageBox.question(None, "Alle Punkte ausgewählt", "Es wurden alle Punkte ausgewählt. " \
+                                             "Möchten Sie fortfahren?",
+                                     QMessageBox.Yes | QMessageBox.No)
+                if reply == QMessageBox.No:
+                    new_layer.removeSelection()
+                    self.dlg.showNormal()
+                    return
+            
+            reply = QMessageBox.question(None, "Werte überschreiben?", f"{count} Punkte wurden ausgewählt. " \
+                                         "Möchten Sie die Werte dieser Punkte überschreiben?",
+                                         QMessageBox.Yes | QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                new_layer.startEditing()          
+                selected_column = self.dlg.columnComboBox_Attribute.currentText()
+                field_idx = new_layer.fields().indexOf(selected_column)
+                
+                if field_idx == -1:
+                    QMessageBox.warning(None, "Feld nicht existent", f"Das Feld {selected_column} existiert nicht!")
+                    return
+                
+                value = QInputDialog.getText(None, "Wert eingeben", f"Gib den neuen Wert für das Feld {selected_column} ein:")[0]
+                if not value:
+                    QMessageBox.warning(None, "Kein Wert eingegeben", "Bitte geben Sie einen Wert ein.")
+                    return
+                
+                # Feldtyp überprüfen und ggf. Typ der Eingabe anpassen
+                field = new_layer.fields().field(field_idx)
+                field_type = field.type()
+                if field_type == QVariant.Int:
+                    try:
+                        value = int(value)
+                    except ValueError:
+                        QMessageBox.warning(None, "Fehler", "Ungültige Ganzzahl.")
+                        return
+                elif field_type == QVariant.Double:
+                    try:
+                        value = float(value)
+                    except ValueError:
+                        QMessageBox.warning(None, "Fehler", "Ungültige Zahl.")
+                        return                
+                
+                for id in new_layer.selectedFeatureIds():
+                    success = new_layer.changeAttributeValue(id, field_idx, value)
+                    if not success:
+                        QMessageBox.warning(self, "Fehler", "Attribut konnte nicht geändert werden.")
+                new_layer.commitChanges()
+            else:
+                new_layer.removeSelection()
+            
     
     ########################    
     ### Cleanup Function ###    TO DO: muss überarbeitet werden
