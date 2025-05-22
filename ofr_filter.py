@@ -1273,7 +1273,6 @@ class OFRFilter:
         layout.addWidget(label)
 
         confirm_button = QPushButton("Auswahl beenden")
-
         confirm_button.clicked.connect(lambda: self.point_confirm_selection(dialog, new_layer))
         layout.addWidget(confirm_button)
 
@@ -1282,7 +1281,7 @@ class OFRFilter:
         # Setze das Dialogfenster permanent in den Vordergrund
         dialog.setWindowFlag(Qt.WindowStaysOnTopHint)
 
-        # dialog.setModal(False)  # Setze den Dialog als nicht-modal
+        dialog.setModal(False)  # Setze den Dialog als nicht-modal
         dialog.show()
 
         # # Speichern der IDs der aktuell ausgewählten Features
@@ -1350,6 +1349,17 @@ class OFRFilter:
                     success = new_layer.changeAttributeValue(id, field_idx, value)
                     if not success:
                         QMessageBox.warning(self, "Fehler", "Attribut konnte nicht geändert werden.")
+
+                # Frage nach weiterer Punkte-Auswahl
+                morePoints = QMessageBox.question(None, "Mehr Punkte?", "Sollen weitere Punkte für das Attribut " \
+                                         f"{selected_column} ausgewählt und geändert werden?",
+                                         QMessageBox.Yes | QMessageBox.No)
+                if morePoints == QMessageBox.No:
+                    dialog.accept()                    
+                    self.dlg.on_SymbButton_clicked()                    
+                    self.dlg.showNormal()
+                    iface.actionPan().trigger()
+                
                 new_layer.commitChanges()
             else:
                 new_layer.removeSelection()
