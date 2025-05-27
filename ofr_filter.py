@@ -40,6 +40,7 @@ from .ofr_filter_dialog import OFRFilterDialog
 import os.path
 import pandas as pd
 import numpy as np
+#from .ofr_LogManager import LogManager
 
 class OFRFilter:
     """QGIS Plugin Implementation."""
@@ -77,7 +78,10 @@ class OFRFilter:
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
         self.punktauswahl_gesamt =  []
+        #self.log = LogManager("unbekannter_Layer", QgsProject.instance().homePath())
+
     # noinspection PyMethodMayBeStatic
+
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
 

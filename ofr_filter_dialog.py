@@ -38,6 +38,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy as np
 import itertools
+from .ofr_LogManager import LogManager as log
 
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
@@ -226,6 +227,13 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # Aktualisiere die Buttons nach dem Datenladen
         self.update_button_states()
+
+        # LogManager initialisieren
+        self.log = log(self.mMapLayerComboBox_Daten.currentText(), QgsProject.instance().homePath())
+        #QMessageBox.information(None, "bla", f"Das ist {daten_layer}")
+
+        #self.log = self.plugin_instance.init_log_manager(daten_layer.source)
+        #LogManager(actual_layer_name, actual_project_path)
         
 
     def update_button_states(self):
@@ -447,11 +455,6 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # Rückgabe der sortierten Layer anhand der Priorität
         return sorted(layers, key=lambda layer: priority_order.get(layer, 6))
-
-
-
-
-    
     
     ##############
     ### Filter ###
@@ -1130,6 +1133,8 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
     ### Weiter und Zurück ###
     #########################
     def on_weiter_button_clicked(self):
+        # test = self.mMapLayerComboBox_Daten.currentText()
+        # QMessageBox.information(self, "bla", f"{test}")
         if hasattr(self, 'new_layer') and self.new_layer is not None:
             self.tabWidget.setTabEnabled(1, True)
             self.tabWidget.setCurrentIndex(1)
@@ -1148,6 +1153,12 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             self.mapCanvas.setLayers([])
             self.mapCanvas.refresh()
 
+            # Log
+            self.log.set_layer_info(
+                punkt_layer = self.mMapLayerComboBox_Daten.currentText(),
+                #parzellen_layer=self.parzellen_layer.name() if self.parzellen_layer else "Nicht angegeben",
+                #feldgrenze_layer=...,
+            )
             
         else:
             QMessageBox.critical(self, "Fehler", "Sie müssen einen Punktdatensatz auswählen")
@@ -1270,8 +1281,9 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
     ### Abbruch ###
     ###############
     def on_exit_button_clicked(self):
-        """closeEvent ausführen"""
+        """closeEvent ausführen"""        
         self.close()  # Schließt das Fenster und ruft das 'closeEvent' auf
+        self.log.write_logs()
         
     def closeEvent(self, event):
         """Cleanup ausführen, wenn Fenster geschlossen wird"""        
