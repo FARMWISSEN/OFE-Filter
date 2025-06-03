@@ -1248,18 +1248,7 @@ class OFRFilter:
         else:
             new_layer.updateExtents()
             new_layer.triggerRepaint()
-            rp = QMessageBox.question(self.dlg, 'Attribute erfolgreich übertragen', 
-                                         'Attribute erfolgreich übertragen. Möchten Sie weitere Attribute übertragen?', 
-                                         QMessageBox.Yes | QMessageBox.No, 
-                                         QMessageBox.No)
-                
-            if rp == QMessageBox.Yes:
-                for i in range(self.dlg.mComboBox_Plots.count()):
-                    item = self.dlg.mComboBox_Plots.model().item(i)
-                    item.setCheckState(0)
-                return
-            else:
-                self.dlg.close()
+            QMessageBox.information(self.dlg, 'Erfolg', 'Attribute erfolgreich übertragen.')                
   
     def point_selection(self, new_layer):
         """Aktiviert das eingebaute Werkzeug 'Objekte über Polygon wählen' und zeigt ein 
