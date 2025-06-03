@@ -50,6 +50,11 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, ofr_filter_dir, plugin_instance, parent=None):
         """Initialisiert den Dialog und verknüpft GUI-Elemente mit Funktionen."""
         super(OFRFilterDialog, self).__init__(parent)
+
+        # Informationen für Logging
+        self.plugin_name = "OFR_Filter"
+        self.plugin_version = "0.0.2"
+
         self.setupUi(self)
         self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)  # Setze Fenster-Flags für Minimieren- und Schließen-Button
         self.ofr_filter_dir = ofr_filter_dir  # Speichert den Pfad des Zielordners
@@ -86,21 +91,24 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         self.WeiterButton2.clicked.connect(self.on_weiter_button_2_clicked)
         self.resetButton.clicked.connect(self.reset_filters)
         self.pushButton_Attribut_anlegen.clicked.connect(self.on_attribut_anlegen_clicked)
+        self.pushButton_auswahl_Parzelle.clicked.connect(self.show_polygon_layer_selector)
         
         # Deaktivieren der ComboBoxen beim Start
         self.mMapLayerComboBox_Parzellen.setEnabled(False)
-        self.mMapLayerComboBox_Innenfaelche.setEnabled(False)
+        self.mMapLayerComboBox_Innenflaeche.setEnabled(False)
         self.mMapLayerComboBox_Feldgrenze.setEnabled(False)
         self.mMapLayerComboBox_AF.setEnabled(False)
         self.columnComboBox.setEnabled(False)
         self.mComboBox_Plots.setEnabled(False)
+        self.groupBox_fehlendeParzelle.setEnabled(False)
+        self.groupBox_fehlendeParzelle.hide()
 
         # Initialisieren der Buttons
         self.update_button_states()
 
         # Verknüpfen der ComboBox-Signale mit der Button-Aktivierungs- und Überprüfungsfunktion
         self.mMapLayerComboBox_Feldgrenze.currentIndexChanged.connect(self.on_combobox_changed)
-        self.mMapLayerComboBox_Innenfaelche.currentIndexChanged.connect(self.on_combobox_changed)
+        self.mMapLayerComboBox_Innenflaeche.currentIndexChanged.connect(self.on_combobox_changed)
         self.mMapLayerComboBox_Parzellen.currentIndexChanged.connect(self.on_combobox_changed)
         self.mMapLayerComboBox_AF.currentIndexChanged.connect(self.on_combobox_changed)
         self.mMapLayerComboBox_Daten.currentIndexChanged.connect(self.validate_and_update_buttons)
@@ -178,10 +186,10 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             return False
 
         # Überprüfen, ob der Innenfläche-Layer ein Polygonlayer ist
-        innenflaeche_layer = self.mMapLayerComboBox_Innenfaelche.currentLayer()
+        innenflaeche_layer = self.mMapLayerComboBox_Innenflaeche.currentLayer()
         if innenflaeche_layer is not None and not self.is_valid_polygon_layer(innenflaeche_layer):
             QMessageBox.critical(self, "Fehler", "Auswahl nicht korrekt: Es muss ein Polygon-Vektorlayer für 'Innenfläche' gewählt werden.")
-            self.mMapLayerComboBox_Innenfaelche.setCurrentIndex(-1)
+            self.mMapLayerComboBox_Innenflaeche.setCurrentIndex(-1)
             return False
 
         # Überprüfen, ob der Feldgrenze-Layer ein Polygonlayer ist
@@ -218,7 +226,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # Jetzt die anderen ComboBoxen aktivieren, wenn der daten_layer valid ist
         self.mMapLayerComboBox_Parzellen.setEnabled(True)
-        self.mMapLayerComboBox_Innenfaelche.setEnabled(True)
+        self.mMapLayerComboBox_Innenflaeche.setEnabled(True)
         self.mMapLayerComboBox_Feldgrenze.setEnabled(True)
         self.mMapLayerComboBox_AF.setEnabled(True)
 
@@ -230,6 +238,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # LogManager initialisieren
         self.log = log(self.mMapLayerComboBox_Daten.currentText(), QgsProject.instance().homePath())
+        self.log.set_plugin_info(self.plugin_name, self.plugin_version)
         #QMessageBox.information(None, "bla", f"Das ist {daten_layer}")
 
         #self.log = self.plugin_instance.init_log_manager(daten_layer.source)
@@ -242,7 +251,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # Buttons basierend auf Layer-Validität aktivieren/deaktivieren
         self.cutFG.setEnabled(daten_layer_valid and self.is_valid_polygon_layer(self.mMapLayerComboBox_Feldgrenze.currentLayer()))
-        self.cutFB.setEnabled(daten_layer_valid and self.is_valid_polygon_layer(self.mMapLayerComboBox_Innenfaelche.currentLayer()))
+        self.cutFB.setEnabled(daten_layer_valid and self.is_valid_polygon_layer(self.mMapLayerComboBox_Innenflaeche.currentLayer()))
         self.cutPlot.setEnabled(daten_layer_valid and self.is_valid_polygon_layer(self.mMapLayerComboBox_Parzellen.currentLayer()))
         self.cutAF.setEnabled(daten_layer_valid and self.is_valid_polygon_layer(self.mMapLayerComboBox_AF.currentLayer()))
         self.cutPoints.setEnabled(hasattr(self, 'new_layer') and self.new_layer is not None)
@@ -290,7 +299,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
     
     def on_Vorgewende_abschneiden_clicked(self):
         """Lösche Punkte im Vorgewende"""
-        self.plugin_instance.lösche_punkte_auf_Vorgewende(self.new_layer, self.mMapLayerComboBox_Innenfaelche.currentLayer())
+        self.plugin_instance.lösche_punkte_auf_Vorgewende(self.new_layer, self.mMapLayerComboBox_Innenflaeche.currentLayer())
         
     def on_auf_Parzellen_zuschneiden_clicked(self):
         """Lösche Punkte außerhalb der Parzellen"""
@@ -368,7 +377,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
 
             # Füge die anderen Layer zur Liste hinzu, falls sie existieren
             feldgrenze_layer = self.mMapLayerComboBox_Feldgrenze.currentLayer()
-            innenfaelche_layer = self.mMapLayerComboBox_Innenfaelche.currentLayer()
+            innenfaelche_layer = self.mMapLayerComboBox_Innenflaeche.currentLayer()
             parzellen_layer = self.mMapLayerComboBox_Parzellen.currentLayer()
             af_layer = self.mMapLayerComboBox_AF.currentLayer()
 
@@ -447,7 +456,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         priority_order = {
             self.background_layer: 6, 
             self.mMapLayerComboBox_Feldgrenze.currentLayer(): 5,
-            self.mMapLayerComboBox_Innenfaelche.currentLayer(): 4,
+            self.mMapLayerComboBox_Innenflaeche.currentLayer(): 4,
             self.mMapLayerComboBox_Parzellen.currentLayer(): 3,
             self.mMapLayerComboBox_AF.currentLayer(): 2,
             self.new_layer: 1            
@@ -1046,6 +1055,27 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 self.show_polygon_layer_selector()
             else:
                 self.close()
+
+    def parzellen_layer_check(self, check:bool):
+            parzellen_layer = self.mMapLayerComboBox_Parzellen.currentLayer()
+            if parzellen_layer == None:
+                self.groupBox_fehlendeParzelle.show()
+                self.groupBox_fehlendeParzelle.setEnabled(True)
+                self.groupBox_Parzellenattribute.setEnabled(False)
+            else:                
+                #self.groupBox_fehlendeParzelle.setEnabled(False)
+                self.groupBox_Parzellenattribute.setEnabled(True)
+                self.mComboBox_Plots.clear()
+                fields = parzellen_layer.fields()
+                for field in fields:
+                    self.mComboBox_Plots.addItem(field.name())
+                self.mComboBox_Plots.setEnabled(True)
+                if check == True:
+                    self.label_Parzellen_warnung.setText(parzellen_layer.name())
+                    self.groupBox_fehlendeParzelle.setTitle("Parzellen-Layer ausgewählt:")
+                else:                    
+                    self.groupBox_fehlendeParzelle.hide()
+
                 
                         
     def on_attribut_button_clicked(self):
@@ -1095,9 +1125,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             selected_layer = combo.currentData()
             self.mMapLayerComboBox_Parzellen.setLayer(selected_layer)
             self.attribute_anfügen_check()
-                    
-        else:
-            self.close()
+            self.parzellen_layer_check(True)                    
 
     def on_point_selection_clicked(self):
         self.showMinimized()        
@@ -1133,13 +1161,11 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
     ### Weiter und Zurück ###
     #########################
     def on_weiter_button_clicked(self):
-        # test = self.mMapLayerComboBox_Daten.currentText()
-        # QMessageBox.information(self, "bla", f"{test}")
         if hasattr(self, 'new_layer') and self.new_layer is not None:
             self.tabWidget.setTabEnabled(1, True)
             self.tabWidget.setCurrentIndex(1)
             self.tabWidget.setTabEnabled(0, False)
-            
+
             # Auswahltabelle erstellen und füllen
             self.plugin_instance.create_auswahl_tabelle(self.new_layer)
             self.fill_table_widget(self.tableWidget_Auswahl, self.plugin_instance.auswahl_tabelle)
@@ -1156,10 +1182,13 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             # Log
             self.log.set_layer_info(
                 punkt_layer = self.mMapLayerComboBox_Daten.currentText(),
-                #parzellen_layer=self.parzellen_layer.name() if self.parzellen_layer else "Nicht angegeben",
-                #feldgrenze_layer=...,
+                parzellen_layer = self.mMapLayerComboBox_Parzellen.currentText() if self.mMapLayerComboBox_Parzellen.currentText() else "Nicht angegeben",
+                innenflaeche_layer = self.mMapLayerComboBox_Innenflaeche.currentText() if self.mMapLayerComboBox_Innenflaeche.currentText() else "Nicht angegeben",
+                feldgrenze_layer = self.mMapLayerComboBox_Feldgrenze.currentText() if self.mMapLayerComboBox_Feldgrenze.currentText() else "Nicht angegeben",                
+                ausschlussflaeche_layer = self.mMapLayerComboBox_AF.currentText() if self.mMapLayerComboBox_AF.currentText() else "Nicht angegeben",
+                filter_layer = self.new_layer.name()
             )
-            
+
         else:
             QMessageBox.critical(self, "Fehler", "Sie müssen einen Punktdatensatz auswählen")
             
@@ -1239,7 +1268,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 self.new_layer.commitChanges() # Änderungen speichern und Bearbeitung beenden
                 self.on_SymbButton_clicked()
                               
-        self.attribute_anfügen_check()
+        self.parzellen_layer_check(False)
         
         
         
@@ -1283,7 +1312,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
     def on_exit_button_clicked(self):
         """closeEvent ausführen"""        
         self.close()  # Schließt das Fenster und ruft das 'closeEvent' auf
-        self.log.write_logs()
+        #self.log.write_logs()
         
     def closeEvent(self, event):
         """Cleanup ausführen, wenn Fenster geschlossen wird"""        
@@ -1317,13 +1346,13 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 # Reset UI components
                 self.mMapLayerComboBox_Daten.setEnabled(True)
                 self.mMapLayerComboBox_Parzellen.setEnabled(False)
-                self.mMapLayerComboBox_Innenfaelche.setEnabled(False)
+                self.mMapLayerComboBox_Innenflaeche.setEnabled(False)
                 self.mMapLayerComboBox_Feldgrenze.setEnabled(False)
                 self.mMapLayerComboBox_AF.setEnabled(False)
                 self.columnComboBox.setEnabled(False)        
                 self.mMapLayerComboBox_Daten.setCurrentIndex(-1)
                 self.mMapLayerComboBox_Parzellen.setCurrentIndex(-1)
-                self.mMapLayerComboBox_Innenfaelche.setCurrentIndex(-1)
+                self.mMapLayerComboBox_Innenflaeche.setCurrentIndex(-1)
                 self.mMapLayerComboBox_Feldgrenze.setCurrentIndex(-1)
                 self.mMapLayerComboBox_AF.setCurrentIndex(-1)
                 self.columnComboBox.clear()
@@ -1388,13 +1417,13 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 # Reset UI components
                 self.mMapLayerComboBox_Daten.setEnabled(True)
                 self.mMapLayerComboBox_Parzellen.setEnabled(False)
-                self.mMapLayerComboBox_Innenfaelche.setEnabled(False)
+                self.mMapLayerComboBox_Innenflaeche.setEnabled(False)
                 self.mMapLayerComboBox_Feldgrenze.setEnabled(False)
                 self.mMapLayerComboBox_AF.setEnabled(False)
                 self.columnComboBox.setEnabled(False)        
                 self.mMapLayerComboBox_Daten.setCurrentIndex(-1)
                 self.mMapLayerComboBox_Parzellen.setCurrentIndex(-1)
-                self.mMapLayerComboBox_Innenfaelche.setCurrentIndex(-1)
+                self.mMapLayerComboBox_Innenflaeche.setCurrentIndex(-1)
                 self.mMapLayerComboBox_Feldgrenze.setCurrentIndex(-1)
                 self.mMapLayerComboBox_AF.setCurrentIndex(-1)
                 self.columnComboBox.clear()

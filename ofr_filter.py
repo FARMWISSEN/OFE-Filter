@@ -53,6 +53,11 @@ class OFRFilter:
             application at run time.
         :type iface: QgsInterface
         """
+
+        # Information for Logging
+        self.plugin_name = "OFR_Filter"
+        self.plugin_version = "0.0.2"
+
         # Save reference to the QGIS interface
         self.iface = iface
         

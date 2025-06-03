@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1039</width>
-    <height>878</height>
+    <width>1035</width>
+    <height>1053</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -45,8 +45,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>1023</width>
-        <height>862</height>
+        <width>1019</width>
+        <height>1037</height>
        </rect>
       </property>
       <widget class="QTabWidget" name="tabWidget">
@@ -55,7 +55,7 @@
          <x>0</x>
          <y>0</y>
          <width>1021</width>
-         <height>861</height>
+         <height>1041</height>
         </rect>
        </property>
        <property name="currentIndex">
@@ -71,7 +71,7 @@
            <x>10</x>
            <y>10</y>
            <width>771</width>
-           <height>280</height>
+           <height>391</height>
           </rect>
          </property>
          <property name="title">
@@ -81,7 +81,7 @@
           <property name="geometry">
            <rect>
             <x>150</x>
-            <y>30</y>
+            <y>60</y>
             <width>500</width>
             <height>30</height>
            </rect>
@@ -97,7 +97,7 @@
           <property name="geometry">
            <rect>
             <x>150</x>
-            <y>80</y>
+            <y>190</y>
             <width>500</width>
             <height>30</height>
            </rect>
@@ -109,11 +109,11 @@
            <bool>true</bool>
           </property>
          </widget>
-         <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox_Innenfaelche">
+         <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox_Innenflaeche">
           <property name="geometry">
            <rect>
             <x>150</x>
-            <y>130</y>
+            <y>240</y>
             <width>500</width>
             <height>30</height>
            </rect>
@@ -129,7 +129,7 @@
           <property name="geometry">
            <rect>
             <x>34</x>
-            <y>30</y>
+            <y>60</y>
             <width>91</width>
             <height>30</height>
            </rect>
@@ -145,7 +145,7 @@
           <property name="geometry">
            <rect>
             <x>24</x>
-            <y>80</y>
+            <y>190</y>
             <width>101</width>
             <height>30</height>
            </rect>
@@ -161,7 +161,7 @@
           <property name="geometry">
            <rect>
             <x>24</x>
-            <y>130</y>
+            <y>240</y>
             <width>101</width>
             <height>30</height>
            </rect>
@@ -177,7 +177,7 @@
           <property name="geometry">
            <rect>
             <x>670</x>
-            <y>30</y>
+            <y>60</y>
             <width>91</width>
             <height>30</height>
            </rect>
@@ -190,7 +190,7 @@
           <property name="geometry">
            <rect>
             <x>150</x>
-            <y>180</y>
+            <y>290</y>
             <width>500</width>
             <height>30</height>
            </rect>
@@ -206,7 +206,7 @@
           <property name="geometry">
            <rect>
             <x>24</x>
-            <y>180</y>
+            <y>290</y>
             <width>101</width>
             <height>30</height>
            </rect>
@@ -222,7 +222,7 @@
           <property name="geometry">
            <rect>
             <x>150</x>
-            <y>230</y>
+            <y>340</y>
             <width>500</width>
             <height>30</height>
            </rect>
@@ -238,7 +238,7 @@
           <property name="geometry">
            <rect>
             <x>0</x>
-            <y>230</y>
+            <y>340</y>
             <width>131</width>
             <height>30</height>
            </rect>
@@ -250,6 +250,70 @@
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
+         <widget class="Line" name="line">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>120</y>
+            <width>771</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Sunken</enum>
+          </property>
+          <property name="lineWidth">
+           <number>4</number>
+          </property>
+          <property name="midLineWidth">
+           <number>0</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_hLayer">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>140</y>
+            <width>131</width>
+            <height>41</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>13</pointsize>
+            <weight>50</weight>
+            <bold>false</bold>
+            <underline>true</underline>
+           </font>
+          </property>
+          <property name="text">
+           <string>Hilfs-Layer:</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_hLayer_2">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>30</y>
+            <width>111</width>
+            <height>19</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>13</pointsize>
+            <weight>50</weight>
+            <bold>false</bold>
+            <underline>true</underline>
+           </font>
+          </property>
+          <property name="text">
+           <string>Haupt-Layer:</string>
+          </property>
+         </widget>
         </widget>
         <widget class="QGroupBox" name="groupBox_Zuschnitt">
          <property name="geometry">
@@ -257,7 +321,7 @@
            <x>790</x>
            <y>10</y>
            <width>211</width>
-           <height>280</height>
+           <height>391</height>
           </rect>
          </property>
          <property name="title">
@@ -267,7 +331,7 @@
           <property name="geometry">
            <rect>
             <x>5</x>
-            <y>130</y>
+            <y>240</y>
             <width>201</width>
             <height>30</height>
            </rect>
@@ -280,7 +344,7 @@
           <property name="geometry">
            <rect>
             <x>5</x>
-            <y>80</y>
+            <y>190</y>
             <width>201</width>
             <height>30</height>
            </rect>
@@ -293,7 +357,7 @@
           <property name="geometry">
            <rect>
             <x>5</x>
-            <y>30</y>
+            <y>60</y>
             <width>201</width>
             <height>30</height>
            </rect>
@@ -306,7 +370,7 @@
           <property name="geometry">
            <rect>
             <x>5</x>
-            <y>180</y>
+            <y>290</y>
             <width>201</width>
             <height>30</height>
            </rect>
@@ -319,7 +383,7 @@
           <property name="geometry">
            <rect>
             <x>5</x>
-            <y>230</y>
+            <y>340</y>
             <width>201</width>
             <height>30</height>
            </rect>
@@ -328,12 +392,31 @@
            <string>Ausschlussfl. ausschließen</string>
           </property>
          </widget>
+         <widget class="Line" name="line_2">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>120</y>
+            <width>211</width>
+            <height>20</height>
+           </rect>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Sunken</enum>
+          </property>
+          <property name="lineWidth">
+           <number>4</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
         </widget>
         <widget class="QPushButton" name="exitButton">
          <property name="geometry">
           <rect>
            <x>670</x>
-           <y>780</y>
+           <y>960</y>
            <width>150</width>
            <height>30</height>
           </rect>
@@ -346,7 +429,7 @@
          <property name="geometry">
           <rect>
            <x>10</x>
-           <y>740</y>
+           <y>920</y>
            <width>381</width>
            <height>61</height>
           </rect>
@@ -398,7 +481,7 @@
          <property name="geometry">
           <rect>
            <x>830</x>
-           <y>780</y>
+           <y>960</y>
            <width>150</width>
            <height>30</height>
           </rect>
@@ -411,9 +494,9 @@
          <property name="geometry">
           <rect>
            <x>0</x>
-           <y>290</y>
+           <y>410</y>
            <width>1001</width>
-           <height>441</height>
+           <height>501</height>
           </rect>
          </property>
         </widget>
@@ -465,7 +548,7 @@
          <property name="geometry">
           <rect>
            <x>630</x>
-           <y>780</y>
+           <y>960</y>
            <width>161</width>
            <height>30</height>
           </rect>
@@ -478,7 +561,7 @@
          <property name="geometry">
           <rect>
            <x>10</x>
-           <y>780</y>
+           <y>960</y>
            <width>150</width>
            <height>30</height>
           </rect>
@@ -1037,7 +1120,7 @@
          <property name="geometry">
           <rect>
            <x>460</x>
-           <y>780</y>
+           <y>960</y>
            <width>161</width>
            <height>30</height>
           </rect>
@@ -1050,7 +1133,7 @@
          <property name="geometry">
           <rect>
            <x>800</x>
-           <y>780</y>
+           <y>960</y>
            <width>181</width>
            <height>30</height>
           </rect>
@@ -1068,7 +1151,7 @@
          <property name="geometry">
           <rect>
            <x>860</x>
-           <y>780</y>
+           <y>960</y>
            <width>121</width>
            <height>30</height>
           </rect>
@@ -1080,8 +1163,8 @@
         <widget class="QGroupBox" name="groupBox_Parzellenattribute">
          <property name="geometry">
           <rect>
-           <x>0</x>
-           <y>20</y>
+           <x>10</x>
+           <y>350</y>
            <width>840</width>
            <height>141</height>
           </rect>
@@ -1129,8 +1212,8 @@
         <widget class="QGroupBox" name="groupBox_Attribute_manuell">
          <property name="geometry">
           <rect>
-           <x>0</x>
-           <y>220</y>
+           <x>10</x>
+           <y>10</y>
            <width>840</width>
            <height>201</height>
           </rect>
@@ -1221,6 +1304,56 @@
           </property>
           <property name="text">
            <string>Spalte anlegen</string>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QGroupBox" name="groupBox_fehlendeParzelle">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>19</x>
+           <y>240</y>
+           <width>831</width>
+           <height>80</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>Kein Parzellen Layer ausgewählt!</string>
+         </property>
+         <widget class="QLabel" name="label_Parzellen_warnung">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>30</y>
+            <width>401</width>
+            <height>41</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>13</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+            <kerning>true</kerning>
+           </font>
+          </property>
+          <property name="text">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#e01b24;&quot;&gt;Es wurde noch kein Parzellen-Layer ausgewählt.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="pushButton_auswahl_Parzelle">
+          <property name="geometry">
+           <rect>
+            <x>470</x>
+            <y>40</y>
+            <width>231</width>
+            <height>27</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>PushButton</string>
           </property>
          </widget>
         </widget>
