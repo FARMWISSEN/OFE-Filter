@@ -75,9 +75,9 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         self.cutPoints.clicked.connect(self.on_polygon_selection_clicked)
         self.pushButton_Auswahl_Attribut.clicked.connect(self.on_point_selection_clicked)
         self.cutAF.clicked.connect(self.on_af_ausschliessen_clicked)
-        self.exitButton.clicked.connect(self.on_exit_button_clicked)
+        self.exitButton.clicked.connect(self.on_cancel_button_clicked)
         self.SymbButton.clicked.connect(self.on_SymbButton_clicked)
-        self.exitButton2.clicked.connect(self.on_exit_button_clicked)
+        self.exitButton2.clicked.connect(self.on_cancel_button_clicked)
         self.WeiterButton.clicked.connect(self.on_weiter_button_clicked)
         self.BackButton.clicked.connect(self.on_back_button_clicked)
         self.untergrenze.clicked.connect(self.on_untergrenze_anwenden_clicked)
@@ -1309,10 +1309,18 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
     ###############
     ### Abbruch ###
     ###############
-    def on_exit_button_clicked(self):
+    # Button "Abbrechen" im Reiter "Daten" und "Filter"
+    def on_cancel_button_clicked(self):
         """closeEvent ausführen"""        
         self.close()  # Schließt das Fenster und ruft das 'closeEvent' auf
-        #self.log.write_logs()
+        
+    # Button "Beenden" im Reiter "Attribute einfügen"
+    def on_exit_button_clicked(self):
+        rp = QMessageBox.question(None, "Plugin Beenden?", "Möchten Sie die Bearbeitung des Datensatzes wirklich beenden?",
+                                  QMessageBox.Yes | QMessageBox.No)
+        if rp == QMessageBox.Yes:
+            self.close()
+            # self.log.write_logs()
         
     def closeEvent(self, event):
         """Cleanup ausführen, wenn Fenster geschlossen wird"""        
