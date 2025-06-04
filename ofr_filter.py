@@ -1241,6 +1241,7 @@ class OFRFilter:
                         value = polygon_feature[field_name]
                         field_index = field_indexes[field_name]
                         new_layer.changeAttributeValue(point_id, field_index, value)
+                
 
         # 8. Änderungen speichern
         if not new_layer.commitChanges():
@@ -1248,6 +1249,7 @@ class OFRFilter:
         else:
             new_layer.updateExtents()
             new_layer.triggerRepaint()
+            self.dlg.populate_attribut_combobox(new_layer)
             QMessageBox.information(self.dlg, 'Erfolg', 'Attribute erfolgreich übertragen.')                
   
     def point_selection(self, new_layer):

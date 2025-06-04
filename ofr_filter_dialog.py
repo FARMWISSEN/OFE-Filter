@@ -284,6 +284,13 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 self.columnComboBox.addItem(field.name())
                 self.columnComboBox2.addItem(field.name())
             self.columnComboBox_Attribute.addItem(field.name())
+
+    def populate_attribut_combobox(self, new_layer):
+        self.columnComboBox_Attribute.clear()
+        fields = new_layer.fields()
+        self.columnComboBox.addItem("")
+        for field in fields:
+            self.columnComboBox_Attribute.addItem(field.name())
             
     def on_SymbButton_clicked(self):
         if not self.columnComboBox.currentText() is None:
