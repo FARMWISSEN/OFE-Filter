@@ -21,7 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt, QDate
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QMessageBox, QPushButton, QDialog, QVBoxLayout, QLabel, QInputDialog, QLineEdit
 from qgis.core import (
@@ -1292,10 +1292,10 @@ class OFRFilter:
         add_to_selection_button.clicked.connect(lambda: self.add_to_selection(new_layer))
         layout.addWidget(add_to_selection_button)
 
-    # Attribut von Parzelle zu Ertrag -> Combobox aktualisieren
     def point_confirm_selection(self, dialog, new_layer):
         """Bestätigt die Auswahl, zeigt die Anzahl der ausgewählten Punkte an und fragt, 
         für welches Attribute die Werte überschrieben/bearbeitet werden sollen."""
+
         selected_features = new_layer.selectedFeatures()
 
         if selected_features:
@@ -1316,7 +1316,7 @@ class OFRFilter:
                                          "Möchten Sie die Werte dieser Punkte überschreiben?",
                                          QMessageBox.Yes | QMessageBox.No)
             if reply == QMessageBox.Yes:
-                new_layer.startEditing()          
+                new_layer.startEditing()     
                 selected_column = self.dlg.columnComboBox_Attribute.currentText()
                 field_idx = new_layer.fields().indexOf(selected_column)
                 
@@ -1324,26 +1324,43 @@ class OFRFilter:
                     QMessageBox.warning(None, "Feld nicht existent", f"Das Feld {selected_column} existiert nicht!")
                     return
                 
-                value = QInputDialog.getText(None, "Wert eingeben", f"Gib den neuen Wert für das Feld {selected_column} ein:")[0]
-                if not value:
+                value_str, ok = QInputDialog.getText(None, "Wert eingeben", f"Gib den neuen Wert für das Feld {selected_column} ein:")
+                if not value_str:
                     QMessageBox.warning(None, "Kein Wert eingegeben", "Bitte geben Sie einen Wert ein.")
+                    return
+                if not ok:
                     return
                 
                 # Feldtyp überprüfen und ggf. Typ der Eingabe anpassen
                 field = new_layer.fields().field(field_idx)
                 field_type = field.type()
-                if field_type == QVariant.Int:
-                    try:
-                        value = int(value)
-                    except ValueError:
-                        QMessageBox.warning(None, "Fehler", "Ungültige Ganzzahl.")
-                        return
-                elif field_type == QVariant.Double:
-                    try:
-                        value = float(value)
-                    except ValueError:
-                        QMessageBox.warning(None, "Fehler", "Ungültige Zahl.")
-                        return                
+
+                try:
+                    if field_type == QVariant.Int:
+                        value = int(value_str)
+                    elif field_type == QVariant.LongLong:
+                        try:
+                            value = int(value_str)
+                        except ValueError:
+                            QMessageBox.warning(None, "Fehler", "Bitte eine Zahl eingeben!")
+                            return
+                    elif field_type == QVariant.Double:
+                        value = float(value_str)
+                    elif field_type == QVariant.String:
+                        value = str(value_str)
+                    elif field_type == QVariant.Bool:
+                        value = value_str.lower() in ("1", "true", "ja", "yes")
+                    elif field_type == QVariant.Date:
+                        value = QDate.fromString(value_str, "yyyy-MM-dd")
+                        if not value.isValid():
+                            raise ValueError("Ungültiges Datum")
+                    else:
+                        # Fallback: als String einfügen (nicht optimal)
+                        value = str(value)
+
+                except Exception as e:
+                    QMessageBox.warning(None, "Fehler", f"Ungültiger Eingabewert für Typ {field_type}: {e}")
+                    return        
                 
                 for id in new_layer.selectedFeatureIds():
                     success = new_layer.changeAttributeValue(id, field_idx, value)

@@ -102,6 +102,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         self.mComboBox_Plots.setEnabled(False)
         self.groupBox_fehlendeParzelle.setEnabled(False)
         self.groupBox_fehlendeParzelle.hide()
+        self.comboBoxDatentyp.setEnabled(False)
 
         # Initialisieren der Buttons
         self.update_button_states()
@@ -1142,9 +1143,13 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
     def on_attribut_anlegen_clicked(self):
         # Prüfen ob Attribute ausgewählt wurden
         attribut = self.lineEdit.text()
-        self.neues_feld_anlegen(self.new_layer, attribut)
+        # if self.comboBoxDatentyp.currentText() == "String":
+        #     typ = QVariant.String
+        # elif self.comboBoxDatentyp.currentText() == "Integer":
+        #     typ = QVariant.Int
+        self.neues_feld_anlegen(self.new_layer, attribut)#, typ)
 
-    def neues_feld_anlegen(self, new_layer, attribut):
+    def neues_feld_anlegen(self, new_layer, attribut):#, typ):
         # Prüfen, ob Feld schon existiert
         if attribut in [f.name() for f in new_layer.fields()]:
             QMessageBox.warning(self, "Bereits vorhanden!", "Das eingegebene Attribut existiert bereits. Bitte " \
@@ -1155,6 +1160,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             self.new_layer.startEditing()
 
         # Neues Attribut hinzufügen
+        #typ = QVariant.String
         if self.new_layer.dataProvider().addAttributes([QgsField(attribut, QVariant.String)]):
             self.new_layer.updateFields()
             QMessageBox.information(self, "Erfolg", "Attribut erfolgreich angelegt.")
@@ -1274,8 +1280,13 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 # Änderungen speichern und Bearbeitung beenden
                 self.new_layer.commitChanges() # Änderungen speichern und Bearbeitung beenden
                 self.on_SymbButton_clicked()
-                              
+        
         self.parzellen_layer_check(False)
+
+        # Combobox mit Datentypen füllen
+        typ = ["Integer", "String"]
+        self.comboBoxDatentyp.addItems(typ)
+        self.comboBoxDatentyp.setEnabled(True)        
         
         
         

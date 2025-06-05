@@ -1296,7 +1296,7 @@
          <widget class="QPushButton" name="pushButton_Attribut_anlegen">
           <property name="geometry">
            <rect>
-            <x>230</x>
+            <x>590</x>
             <y>160</y>
             <width>131</width>
             <height>30</height>
@@ -1304,6 +1304,29 @@
           </property>
           <property name="text">
            <string>Spalte anlegen</string>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="comboBoxDatentyp">
+          <property name="geometry">
+           <rect>
+            <x>240</x>
+            <y>160</y>
+            <width>271</width>
+            <height>27</height>
+           </rect>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_16">
+          <property name="geometry">
+           <rect>
+            <x>240</x>
+            <y>140</y>
+            <width>271</width>
+            <height>19</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Datentyp der neuen Spalte auswählen:</string>
           </property>
          </widget>
         </widget>
