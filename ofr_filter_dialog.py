@@ -38,7 +38,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy as np
 import itertools
-from .ofr_LogManager import LogManager as log
+# from .ofr_LogManager import LogManager as log
 
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
@@ -53,7 +53,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # Informationen für Logging
         self.plugin_name = "OFR_Filter"
-        self.plugin_version = "0.0.2"
+        self.plugin_version = "0.0.4"
 
         self.setupUi(self)
         self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)  # Setze Fenster-Flags für Minimieren- und Schließen-Button
@@ -238,13 +238,8 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         self.update_button_states()
 
         # LogManager initialisieren
-        self.log = log(self.mMapLayerComboBox_Daten.currentText(), QgsProject.instance().homePath())
-        self.log.set_plugin_info(self.plugin_name, self.plugin_version)
-        #QMessageBox.information(None, "bla", f"Das ist {daten_layer}")
-
-        #self.log = self.plugin_instance.init_log_manager(daten_layer.source)
-        #LogManager(actual_layer_name, actual_project_path)
-        
+        # self.log = log(self.mMapLayerComboBox_Daten.currentText(), QgsProject.instance().homePath())
+        # self.log.set_plugin_info(self.plugin_name, self.plugin_version)
 
     def update_button_states(self):
         """Aktualisiert den Aktivierungsstatus der Buttons basierend auf den ausgewählten Layern."""
@@ -1143,25 +1138,30 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
     def on_attribut_anlegen_clicked(self):
         # Prüfen ob Attribute ausgewählt wurden
         attribut = self.lineEdit.text()
-        # if self.comboBoxDatentyp.currentText() == "String":
-        #     typ = QVariant.String
-        # elif self.comboBoxDatentyp.currentText() == "Integer":
-        #     typ = QVariant.Int
-        self.neues_feld_anlegen(self.new_layer, attribut)#, typ)
+        if self.comboBoxDatentyp.currentText() == "String":
+            typ = QVariant.String
+        elif self.comboBoxDatentyp.currentText() == "Ganzzahl":
+            typ = QVariant.Int
+        elif self.comboBoxDatentyp.currentText() == "Dezimalzahl":
+            typ = QVariant.Double
+        self.neues_feld_anlegen(self.new_layer, attribut, typ)
 
-    def neues_feld_anlegen(self, new_layer, attribut):#, typ):
+    def neues_feld_anlegen(self, new_layer, attribut, typ):
         # Prüfen, ob Feld schon existiert
         if attribut in [f.name() for f in new_layer.fields()]:
             QMessageBox.warning(self, "Bereits vorhanden!", "Das eingegebene Attribut existiert bereits. Bitte " \
             "wählen Sie einen anderen Namen.")
             return
-        
+
+        field = QgsField()
+        field.setName(attribut)
+        field.setType(typ)
+
         if not self.new_layer.isEditable():
             self.new_layer.startEditing()
 
         # Neues Attribut hinzufügen
-        #typ = QVariant.String
-        if self.new_layer.dataProvider().addAttributes([QgsField(attribut, QVariant.String)]):
+        if self.new_layer.dataProvider().addAttributes([field]):
             self.new_layer.updateFields()
             QMessageBox.information(self, "Erfolg", "Attribut erfolgreich angelegt.")
             self.columnComboBox_Attribute.addItem(attribut)
@@ -1193,14 +1193,14 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             self.mapCanvas.refresh()
 
             # Log
-            self.log.set_layer_info(
-                punkt_layer = self.mMapLayerComboBox_Daten.currentText(),
-                parzellen_layer = self.mMapLayerComboBox_Parzellen.currentText() if self.mMapLayerComboBox_Parzellen.currentText() else "Nicht angegeben",
-                innenflaeche_layer = self.mMapLayerComboBox_Innenflaeche.currentText() if self.mMapLayerComboBox_Innenflaeche.currentText() else "Nicht angegeben",
-                feldgrenze_layer = self.mMapLayerComboBox_Feldgrenze.currentText() if self.mMapLayerComboBox_Feldgrenze.currentText() else "Nicht angegeben",                
-                ausschlussflaeche_layer = self.mMapLayerComboBox_AF.currentText() if self.mMapLayerComboBox_AF.currentText() else "Nicht angegeben",
-                filter_layer = self.new_layer.name()
-            )
+            # self.log.set_layer_info(
+            #     punkt_layer = self.mMapLayerComboBox_Daten.currentText(),
+            #     parzellen_layer = self.mMapLayerComboBox_Parzellen.currentText() if self.mMapLayerComboBox_Parzellen.currentText() else "Nicht angegeben",
+            #     innenflaeche_layer = self.mMapLayerComboBox_Innenflaeche.currentText() if self.mMapLayerComboBox_Innenflaeche.currentText() else "Nicht angegeben",
+            #     feldgrenze_layer = self.mMapLayerComboBox_Feldgrenze.currentText() if self.mMapLayerComboBox_Feldgrenze.currentText() else "Nicht angegeben",                
+            #     ausschlussflaeche_layer = self.mMapLayerComboBox_AF.currentText() if self.mMapLayerComboBox_AF.currentText() else "Nicht angegeben",
+            #     filter_layer = self.new_layer.name()
+            # )
 
         else:
             QMessageBox.critical(self, "Fehler", "Sie müssen einen Punktdatensatz auswählen")
@@ -1284,9 +1284,9 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         self.parzellen_layer_check(False)
 
         # Combobox mit Datentypen füllen
-        typ = ["Integer", "String"]
+        typ = ["Ganzzahl", "Dezimalzahl", "String"]
         self.comboBoxDatentyp.addItems(typ)
-        self.comboBoxDatentyp.setEnabled(True)        
+        self.comboBoxDatentyp.setEnabled(True)
         
         
         
