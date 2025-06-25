@@ -40,6 +40,7 @@ from .ofr_filter_dialog import OFRFilterDialog
 import os.path
 import pandas as pd
 import numpy as np
+from .ofr_LogManager import LogManager as log
 
 class OFRFilter:
     """QGIS Plugin Implementation."""
@@ -446,6 +447,8 @@ class OFRFilter:
 
         # Rückmeldung über gelöschte Punkte
         QMessageBox.information(None, "Auf Feldgrenze zuschneiden", f"{deleted_count} Punkte wurden gelöscht.")
+
+        self.dlg.log.log_event("Zuschnitt",{"Fläche":"Feldgrenze", "Entfernte Punkte:":f"{deleted_count}"})
         
         # Symbolisierung des Layers updaten
         if deleted_count is not None:
@@ -524,6 +527,8 @@ class OFRFilter:
 
         # Rückmeldung über gelöschte Punkte
         QMessageBox.information(None, "Vorgewende abschneiden", f"{deleted_count} Punkte wurden gelöscht.")
+
+        self.dlg.log.log_event("Zuschnitt",{"Fläche":"Innenfläche", "Entfernte Punkte:":f"{deleted_count}"})
         
         # Symbolisierung des Layers updaten
         if deleted_count is not None:
@@ -603,6 +608,8 @@ class OFRFilter:
 
         # Rückmeldung über gelöschte Punkte
         QMessageBox.information(None, "Löschen von Punkten außerhalb der Parzellen", f"{deleted_count} Punkte wurden gelöscht.")
+
+        self.dlg.log.log_event("Zuschnitt",{"Fläche":"Parzelle", "Entfernte Punkte:":f"{deleted_count}"})
         
         # Symbolisierung des Layers updaten
         if deleted_count is not None:
@@ -681,7 +688,9 @@ class OFRFilter:
         deleted_count = len(ids_to_delete)
 
         # Rückmeldung über gelöschte Punkte
-        QMessageBox.information(None, "Löschen von Punkten in der Auschlussfläche", f"{deleted_count} Punkte wurden gelöscht.")
+        QMessageBox.information(None, "Löschen von Punkten in der Ausschlussfläche", f"{deleted_count} Punkte wurden gelöscht.")
+        
+        self.dlg.log.log_event("Zuschnitt",{"Fläche":"Ausschlussfläche", "Entfernte Punkte:":f"{deleted_count}"})
         
         # Symbolisierung des Layers updaten
         if deleted_count is not None:
@@ -769,6 +778,7 @@ class OFRFilter:
                 new_layer.commitChanges()
 
                 QMessageBox.information(None, "Löschung", f"{count} Punkte wurden gelöscht.")
+                self.dlg.log.log_event("Manueller Zuschnitt", {"Entfernte Punkte":f"{count}"})
             else:
                 # Auswahl aufheben
                 new_layer.removeSelection()

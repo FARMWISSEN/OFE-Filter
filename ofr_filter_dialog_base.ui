@@ -59,7 +59,7 @@
         </rect>
        </property>
        <property name="currentIndex">
-        <number>2</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tab_1">
         <attribute name="title">
@@ -768,7 +768,7 @@
           </rect>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="tab">
           <attribute name="title">
@@ -1059,7 +1059,7 @@
             <rect>
              <x>450</x>
              <y>110</y>
-             <width>211</width>
+             <width>241</width>
              <height>30</height>
             </rect>
            </property>
@@ -1070,9 +1070,9 @@
           <widget class="QPushButton" name="pushButton_SD_reset">
            <property name="geometry">
             <rect>
-             <x>670</x>
+             <x>740</x>
              <y>110</y>
-             <width>80</width>
+             <width>111</width>
              <height>30</height>
             </rect>
            </property>
