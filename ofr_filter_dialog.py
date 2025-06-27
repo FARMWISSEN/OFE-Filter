@@ -1139,9 +1139,9 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
     def log_kenngroessen(self):
         column_name = self.columnComboBox2.currentText()
         values, filtered_values = self.get_values_and_filtered_values()
-        if (values != None) != (filtered_values != None):
-            count_c = len(values)
-            count_fv = len(filtered_values)
+        count_c = len(values)
+        count_fv = len(filtered_values)
+        if ((values != None) or (filtered_values != None)) and (count_fv != count_c):
             mittel_raw = round(np.mean(values), 2)
             mittel_filtered = round(np.mean(filtered_values), 2)
             sd_raw = round(np.std(values), 2)
@@ -1269,7 +1269,10 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             selected_layer = combo.currentData()
             self.mMapLayerComboBox_Parzellen.setLayer(selected_layer)
             self.attribute_anfügen_check()
-            self.parzellen_layer_check(True)                    
+            self.parzellen_layer_check(True)
+            self.log.set_layer_info(
+                parzellen_layer = selected_layer.name()
+            )
 
     def on_point_selection_clicked(self):
         self.showMinimized()        

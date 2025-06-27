@@ -7,7 +7,7 @@ from qgis.core import QgsProject
 class LogManager:
     def __init__(self, layer_source: str, project_path: str):
         # Zeitstempel für die Log-Datei
-        timestamp = datetime.now().strftime("%d.%m.%Y_%H:%M:%S")
+        timestamp = datetime.now().strftime("%d.%m.%Y_%H-%M-%S")
         self.base_name = f"Filter_log_{layer_source}_{timestamp}"
 
         # Verzeichnis für Logs im Projektverzeichnis anlegen
@@ -45,7 +45,7 @@ class LogManager:
     # Protokolliert eine Aktion (z. B. "Filter: Standardabweichung")
     def log_event(self, action_type: str, details: dict):
         entry = {
-            "timestamp": datetime.now().strftime("%d.%m.%Y_%H:%M:%S"),
+            "timestamp": datetime.now().strftime("%d.%m.%Y_%H-%M-%S"),
             "type": action_type,
             "details": details # Dictionary mit statistischen Kennwerten
         }
@@ -54,11 +54,11 @@ class LogManager:
     # Fügt statistische Informationen zu einem Attribut hinzu (z. B. Mittelwert)
     def log_statistic(self, attribute_r: str, stats_r: dict, attribute_f:str, stats_f: dict):
         self.data["statistics"].append({
-            "timestamp": datetime.now().strftime("%d.%m.%Y_%H:%M:%S"),
-            "Daten:": attribute_r,
-            "Werte": stats_r,
-            "Daten": attribute_f,
-            "Werte": stats_f
+            "timestamp": datetime.now().strftime("%d.%m.%Y_%H-%M-%S"),
+            "Daten gesamt:": attribute_r,
+            "Werte gesamt": stats_r,
+            "Daten gefiltert:": attribute_f,
+            "Werte gefilter": stats_f
         })
 
     def write_logs(self):
