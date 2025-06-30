@@ -11,7 +11,7 @@ class LogManager:
         self.base_name = f"Filter_log_{layer_source}_{timestamp}"
 
         # Verzeichnis für Logs im Projektverzeichnis anlegen
-        self.log_dir = os.path.join(project_path, "logs")
+        self.log_dir = os.path.join(project_path, "Logs")
         os.makedirs(self.log_dir, exist_ok=True)
 
         # Pfade für JSON- und CSV-Logdateien

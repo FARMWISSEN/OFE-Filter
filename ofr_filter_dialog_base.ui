@@ -59,7 +59,7 @@
         </rect>
        </property>
        <property name="currentIndex">
-        <number>2</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tab_1">
         <attribute name="title">
@@ -1140,6 +1140,19 @@
          </property>
          <property name="text">
           <string>Abschließen und weiter</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="BtnSaveHistogramm">
+         <property name="geometry">
+          <rect>
+           <x>810</x>
+           <y>770</y>
+           <width>171</width>
+           <height>27</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Histogramm speichern</string>
          </property>
         </widget>
        </widget>

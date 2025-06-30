@@ -33,7 +33,7 @@ from qgis.PyQt.QtWidgets import QVBoxLayout
 from qgis.PyQt.QtWidgets import QMessageBox
 from qgis.utils import iface
 from PyQt5.QtCore import QVariant, Qt
-from PyQt5.QtWidgets import QTableWidgetItem, QVBoxLayout, QDialog, QHBoxLayout, QLabel, QComboBox, QPushButton
+from PyQt5.QtWidgets import QTableWidgetItem, QVBoxLayout, QDialog, QHBoxLayout, QLabel, QComboBox, QPushButton, QFileDialog
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy as np
@@ -93,6 +93,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         self.resetButton.clicked.connect(self.reset_filters)
         self.pushButton_Attribut_anlegen.clicked.connect(self.on_attribut_anlegen_clicked)
         self.pushButton_auswahl_Parzelle.clicked.connect(self.show_polygon_layer_selector)
+        self.BtnSaveHistogramm.clicked.connect(self.save_histogram)
         
         # Deaktivieren der ComboBoxen beim Start
         self.mMapLayerComboBox_Parzellen.setEnabled(False)
@@ -634,8 +635,6 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             self.plugin_instance.create_filterparameter_tabelle(self.new_layer)
             # Multiindex Dataframe für filterbasierte Punktauswahl erstellen
             self.plugin_instance.create_multiindex_punktauswahl(self.new_layer)
-    
-    
 
     def create_histograms(self):
         # Nicht durchführen, wenn geschlossen wird
@@ -831,9 +830,23 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         except (ValueError, TypeError):
             return False
 
+    def save_histogram(self):
+        project_path = QgsProject.instance().homePath()
+        hist_folder = os.path.join(project_path, "Histogramme")
+        os.makedirs(hist_folder, exist_ok=True)
+        file_path, _ = QFileDialog.getSaveFileName(
+        self,
+        "Histogramm speichern",
+        hist_folder,  # Startordner
+        "PNG-Datei (*.png);;JPEG-Datei (*.jpg);;PDF-Datei (*.pdf);;Alle Dateien (*)"
+    )
+        if file_path:
+            if hasattr(self, "figure"):
+                self.figure.savefig(file_path)
+                QMessageBox.information(self, "Erfolg", f"Histogramm gespeichert unter:\n{file_path}")
+            else:
+                QMessageBox.warning(self, "Fehler", "Kein Histogramm zum Speichern vorhanden.")
 
-       
-    
     ########## Untergrenze ########## 
     def on_untergrenze_anwenden_clicked(self):
         # Hole den Wert aus doubleSpinBox_LB
