@@ -878,6 +878,8 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # Aktualisiere die Anzeige des Canvas
         self.create_histograms()
+
+        self.log_untergrenze()
         
     def on_untergrenze_reset_clicked(self):
         # Hole den Spaltennamen aus columnComboBox2
@@ -909,8 +911,8 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # Aktualisiere die Anzeige des Canvas
         self.create_histograms()
-        
-    
+
+        self.log.remove_last_action()
     
     ########## Obergrenze ########## 
     def on_obergrenze_anwenden_clicked(self):
@@ -946,6 +948,8 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # Aktualisiere die Anzeige des Canvas
         self.create_histograms()
+
+        self.log_obergrenze()
         
     def on_obergrenze_reset_clicked(self):
         # Hole den Spaltennamen aus columnComboBox2
@@ -974,6 +978,8 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # Aktualisiere die Anzeige des Canvas
         self.create_histograms()
+
+        self.log.remove_last_action()
         
     ########## Standardabweichung ##########
     def on_sd_anwenden_clicked(self):
@@ -1022,6 +1028,8 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # Aktualisiere die Anzeige des Canvas
         self.create_histograms()
+
+        self.log_sd()
         
     def on_sd_reset_clicked(self):
         # Hole den Spaltennamen aus columnComboBox2
@@ -1052,6 +1060,8 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # Aktualisiere die Anzeige des Canvas
         self.create_histograms()
+
+        self.log.remove_last_action()
 
     ######## Log alle Änderungen im Tab "Filter" ########
     # Log Untergrenze
@@ -1439,10 +1449,10 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 self.new_layer.commitChanges() # Änderungen speichern und Bearbeitung beenden
                 self.on_SymbButton_clicked()
         
-        self.log_untergrenze()
-        self.log_obergrenze()
-        self.log_sd()
-        self.log_kenngroessen()
+        
+        # self.log_obergrenze()
+        # self.log_sd()
+        # self.log_kenngroessen()
         #self.log_ueberlappung()
 
         self.parzellen_layer_check(False)

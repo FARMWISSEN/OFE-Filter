@@ -49,6 +49,18 @@ class LogManager:
             "type": action_type,
             "details": details # Dictionary mit statistischen Kennwerten
         }
+
+        # Überprüfen, ob letzter Eintrag identisch zu neuem Eintrag ist (versehentlicher Doppelclick Button)
+        if self.data["actions"]:
+            last_entry = self.data["actions"][-1].copy()
+            last_entry["timestamp"] = None  # Timestamp ignorieren für Vergleich
+            new_entry_comp = entry.copy()
+            new_entry_comp["timestamp"] = None
+
+            if last_entry == new_entry_comp:
+                print("Doppelter Eintrag – wird ignoriert.")
+                return
+
         self.data["actions"].append(entry)
 
     # Fügt statistische Informationen zu einem Attribut hinzu (z. B. Mittelwert)
@@ -60,6 +72,10 @@ class LogManager:
             "Daten gefiltert:": attribute_f,
             "Werte gefilter": stats_f
         })
+
+    def remove_last_action(self):
+        if self.data["actions"]:
+            self.data["actions"].pop()
 
     def write_logs(self):
         # Schreibt die gesamte Logstruktur in eine JSON-Datei
