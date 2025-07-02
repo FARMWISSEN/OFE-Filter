@@ -38,6 +38,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy as np
 import itertools
+import uuid
 from .ofr_LogManager import LogManager as log
 
 
@@ -849,6 +850,8 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
 
     ########## Untergrenze ########## 
     def on_untergrenze_anwenden_clicked(self):
+        id = str(uuid.uuid4())
+
         # Hole den Wert aus doubleSpinBox_LB
         lb_value = self.doubleSpinBox_LB.value()
 
@@ -879,11 +882,22 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Aktualisiere die Anzeige des Canvas
         self.create_histograms()
 
-        self.log_untergrenze()
+        self.log_untergrenze(id)
+        self.log_kenngroessen(id)
         
     def on_untergrenze_reset_clicked(self):
         # Hole den Spaltennamen aus columnComboBox2
         selected_column = self.columnComboBox2.currentText()
+
+        aktionstyp = "Filter"
+        typ = "Untergrenze"
+        methode = self.comboBox_LB.currentText()
+        wert = str(self.doubleSpinBox_LB.value())
+        id = str(self.log.remove_action_by_parameters(aktionstyp, typ, selected_column, methode, wert))
+        if id:
+            self.log.remove_by_id(id)
+
+        # QMessageBox.information(None, "Test", f"attribut:{selected_column}, wert:{wert}, methode:{methode}, typ:{typ}, Aktionstyp:{aktionstyp}")
         
         # Setze den Wert in der Tabelle Filterparameter: Zeile 1 (Untergrenze) und die ausgewählte Spalte auf NA
         self.plugin_instance.filterparameter_tabelle.at[0, selected_column] = None
@@ -911,11 +925,11 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # Aktualisiere die Anzeige des Canvas
         self.create_histograms()
-
-        self.log.remove_last_action()
     
     ########## Obergrenze ########## 
     def on_obergrenze_anwenden_clicked(self):
+        id = str(uuid.uuid4())
+
         # Hole den Wert aus doubleSpinBox_UB
         ub_value = self.doubleSpinBox_UB.value()
 
@@ -949,11 +963,20 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Aktualisiere die Anzeige des Canvas
         self.create_histograms()
 
-        self.log_obergrenze()
+        self.log_obergrenze(id)
+        self.log_kenngroessen(id)
         
     def on_obergrenze_reset_clicked(self):
         # Hole den Spaltennamen aus columnComboBox2
         selected_column = self.columnComboBox2.currentText()
+
+        aktionstyp = "Filter"
+        typ = "Obergrenze"
+        methode = self.comboBox_UB.currentText()
+        wert = str(self.doubleSpinBox_UB.value())
+        id = str(self.log.remove_action_by_parameters(aktionstyp, typ, selected_column, methode, wert))
+        if id:
+            self.log.remove_by_id(id)
         
         # Setze den Wert in der Tabelle Filterparameter: Zeile 3 (Obergrenze) und die ausgewählte Spalte auf NA
         self.plugin_instance.filterparameter_tabelle.at[2, selected_column] = None
@@ -978,11 +1001,11 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # Aktualisiere die Anzeige des Canvas
         self.create_histograms()
-
-        self.log.remove_last_action()
         
     ########## Standardabweichung ##########
     def on_sd_anwenden_clicked(self):
+        id = str(uuid.uuid4())
+
         # Hole den Wert aus doubleSpinBox_UB
         sd_value = self.doubleSpinBox_SD.value()
 
@@ -1029,11 +1052,20 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Aktualisiere die Anzeige des Canvas
         self.create_histograms()
 
-        self.log_sd()
+        self.log_sd(id)
+        self.log_kenngroessen(id)
         
     def on_sd_reset_clicked(self):
         # Hole den Spaltennamen aus columnComboBox2
         selected_column = self.columnComboBox2.currentText()
+
+        aktionstyp = "Filter"
+        typ = "Standardabweichung"
+        methode = self.comboBox_sd.currentText()
+        wert = str(self.doubleSpinBox_SD.value())
+        id = str(self.log.remove_action_by_parameters(aktionstyp, typ, selected_column, methode, wert))
+        if id:
+            self.log.remove_by_id(id)
         
         # Setze die Werte in der Tabelle Filterparameter zurück
         self.plugin_instance.filterparameter_tabelle.at[4, selected_column] = None
@@ -1061,11 +1093,9 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Aktualisiere die Anzeige des Canvas
         self.create_histograms()
 
-        self.log.remove_last_action()
-
     ######## Log alle Änderungen im Tab "Filter" ########
     # Log Untergrenze
-    def log_untergrenze(self):
+    def log_untergrenze(self, id):
         selected_column = self.columnComboBox2.currentText()
         value = self.plugin_instance.filterparameter_tabelle.at[0, selected_column]
         count = self.plugin_instance.auswahl_tabelle.at[0, selected_column]
@@ -1074,6 +1104,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             relativ = round((count / self.anzahl_punkte) * 100, 2)
             methode = self.comboBox_LB.currentText()
             self.log.log_event("Filter",{
+                "ID": id,
                 "Typ:": "Untergrenze",
                 "Attribut:": f"{selected_column}",
                 "Methode:": f"{methode}",
@@ -1082,7 +1113,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             })
 
     # Log Obergrenze
-    def log_obergrenze(self):
+    def log_obergrenze(self, id):
         selected_column = self.columnComboBox2.currentText()
         value = self.plugin_instance.filterparameter_tabelle.at[2, selected_column]
         count = self.plugin_instance.auswahl_tabelle.at[1, selected_column]
@@ -1091,6 +1122,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             relativ = round((count / self.anzahl_punkte) * 100, 2)
             methode = self.comboBox_LB.currentText()
             self.log.log_event("Filter",{
+                "ID": id,
                 "Typ:": "Obergrenze",
                 "Attribut:": f"{selected_column}",
                 "Methode:": f"{methode}",
@@ -1099,7 +1131,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             })
 
     # Log Standardabweichung
-    def log_sd(self):
+    def log_sd(self, id):
         selected_column = self.columnComboBox2.currentText()
         count = self.plugin_instance.auswahl_tabelle.at[2, selected_column]
         if count != None:
@@ -1108,6 +1140,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             relativ = round((count / self.anzahl_punkte) * 100, 2)
 
             self.log.log_event("Filter",{
+                "ID": id,
                 "Typ:": "Standardabweichung",
                 "Attribut:": f"{selected_column}",
                 "Methode:": f"{methode}",
@@ -1159,7 +1192,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         return values, filtered_values
 
     # Log der wichtigsten statistischen Kenngrößen
-    def log_kenngroessen(self):
+    def log_kenngroessen(self, id:str):
         column_name = self.columnComboBox2.currentText()
         values, filtered_values = self.get_values_and_filtered_values()
         count_c = len(values)
@@ -1185,7 +1218,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 "Max:":f"{max_filtered}",
                 "Standardabweichung:":f"{sd__filtered}",
                 "Anzahl gefilterter Beobachtungen:":f"{count_fv}"
-            })
+            }, id)
 
     def log_attribute(self, type: str):
         if type == "manuell":
@@ -1449,11 +1482,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 self.new_layer.commitChanges() # Änderungen speichern und Bearbeitung beenden
                 self.on_SymbButton_clicked()
         
-        
-        # self.log_obergrenze()
-        # self.log_sd()
         # self.log_kenngroessen()
-        #self.log_ueberlappung()
 
         self.parzellen_layer_check(False)
 

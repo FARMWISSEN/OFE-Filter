@@ -58,24 +58,43 @@ class LogManager:
             new_entry_comp["timestamp"] = None
 
             if last_entry == new_entry_comp:
-                print("Doppelter Eintrag – wird ignoriert.")
                 return
 
         self.data["actions"].append(entry)
 
     # Fügt statistische Informationen zu einem Attribut hinzu (z. B. Mittelwert)
-    def log_statistic(self, attribute_r: str, stats_r: dict, attribute_f:str, stats_f: dict):
+    def log_statistic(self, attribute_r: str, stats_r: dict, attribute_f:str, stats_f: dict, id):
         self.data["statistics"].append({
             "timestamp": datetime.now().strftime("%d.%m.%Y_%H-%M-%S"),
+            "ID": id,
             "Daten gesamt:": attribute_r,
             "Werte gesamt": stats_r,
             "Daten gefiltert:": attribute_f,
             "Werte gefilter": stats_f
         })
 
-    def remove_last_action(self):
-        if self.data["actions"]:
-            self.data["actions"].pop()
+    def remove_action_by_parameters(self, aktionstyp, typ, attribut, methode, wert):
+    # Entfernt den zuletzt passenden Logeintrag basierend auf Attribut, Methode und Typ
+        for i in reversed(range(len(self.data["actions"]))):  # Rückwärts durchgehen
+            action = self.data["actions"][i]
+            if (
+                action["type"] == aktionstyp and
+                action["details"].get("Typ:") == typ and
+                action["details"].get("Attribut:") == attribut and
+                action["details"].get("Methode:") == methode and
+                action["details"].get("Wert:") == wert
+            ):
+                id = action["details"].get("ID")
+                self.data["actions"].pop(i)
+                return id
+        return None
+            
+    def remove_by_id(self, id:str):
+        # Aktion entfernen
+        self.data["statistics"] = [
+            stat for stat in self.data["statistics"]
+            if stat.get("ID") != id
+    ]
 
     def write_logs(self):
         # Schreibt die gesamte Logstruktur in eine JSON-Datei
