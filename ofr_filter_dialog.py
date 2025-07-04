@@ -1120,7 +1120,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
 
         if count != None:
             relativ = round((count / self.anzahl_punkte) * 100, 2)
-            methode = self.comboBox_LB.currentText()
+            methode = self.comboBox_UB.currentText()
             self.log.log_event("Filter",{
                 "ID": id,
                 "Typ:": "Obergrenze",
