@@ -831,6 +831,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         except (ValueError, TypeError):
             return False
 
+    # Funktion zum Speichern des Histogramms
     def save_histogram(self):
         project_path = QgsProject.instance().homePath()
         hist_folder = os.path.join(project_path, "Histogramme")
@@ -838,7 +839,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         file_path, _ = QFileDialog.getSaveFileName(
         self,
         "Histogramm speichern",
-        hist_folder,  # Startordner
+        hist_folder,
         "PNG-Datei (*.png);;JPEG-Datei (*.jpg);;PDF-Datei (*.pdf);;Alle Dateien (*)"
     )
         if file_path:
@@ -850,6 +851,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
 
     ########## Untergrenze ########## 
     def on_untergrenze_anwenden_clicked(self):
+        # ID für Statistik erstellen
         id = str(uuid.uuid4())
 
         # Hole den Wert aus doubleSpinBox_LB
@@ -889,6 +891,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Hole den Spaltennamen aus columnComboBox2
         selected_column = self.columnComboBox2.currentText()
 
+        # Entfernt "actions" und "statistics" aus dem Log, entsprechend aktionstyp, typ, selected_column, methode, wert
         aktionstyp = "Filter"
         typ = "Untergrenze"
         methode = self.comboBox_LB.currentText()
@@ -896,8 +899,6 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         id = str(self.log.remove_action_by_parameters(aktionstyp, typ, selected_column, methode, wert))
         if id:
             self.log.remove_by_id(id)
-
-        # QMessageBox.information(None, "Test", f"attribut:{selected_column}, wert:{wert}, methode:{methode}, typ:{typ}, Aktionstyp:{aktionstyp}")
         
         # Setze den Wert in der Tabelle Filterparameter: Zeile 1 (Untergrenze) und die ausgewählte Spalte auf NA
         self.plugin_instance.filterparameter_tabelle.at[0, selected_column] = None
@@ -928,6 +929,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
     
     ########## Obergrenze ########## 
     def on_obergrenze_anwenden_clicked(self):
+        # ID für Statistik erstellen
         id = str(uuid.uuid4())
 
         # Hole den Wert aus doubleSpinBox_UB
@@ -970,6 +972,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Hole den Spaltennamen aus columnComboBox2
         selected_column = self.columnComboBox2.currentText()
 
+        # Entfernt "actions" und "statistics" aus dem Log, entsprechend aktionstyp, typ, selected_column, methode, wert
         aktionstyp = "Filter"
         typ = "Obergrenze"
         methode = self.comboBox_UB.currentText()
@@ -1059,6 +1062,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Hole den Spaltennamen aus columnComboBox2
         selected_column = self.columnComboBox2.currentText()
 
+        # Entfernt "actions" und "statistics" aus dem Log, entsprechend aktionstyp, typ, selected_column, methode, wert
         aktionstyp = "Filter"
         typ = "Standardabweichung"
         methode = self.comboBox_sd.currentText()
@@ -1093,7 +1097,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Aktualisiere die Anzeige des Canvas
         self.create_histograms()
 
-    ######## Log alle Änderungen im Tab "Filter" ########
+    ########## Log alle Änderungen im Tab "Filter" ##########
     # Log Untergrenze
     def log_untergrenze(self, id):
         selected_column = self.columnComboBox2.currentText()
@@ -1148,7 +1152,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 "Entfernte Punkte:": {"absolut:": f"{count}", "relativ:": f"{relativ}%"}
             })
 
-    # Log der Überlappung
+    # Log Überlappung
     def log_ueberlappung(self):
         self.log.log_event()
 
@@ -1220,6 +1224,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 "Anzahl gefilterter Beobachtungen:":f"{count_fv}"
             }, id)
 
+    # Log wenn Attribute angefügt, bzw. erstellt werden
     def log_attribute(self, type: str):
         if type == "manuell":
             attribut = self.lineEdit.text()
@@ -1334,7 +1339,8 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         self.showMinimized()        
         self.plugin_instance.point_selection(self.new_layer)
 
-    # Bug: Wenn Spaltenname "Testattribut" angegeben wird -> Feld existiert nicht -> Herausfinden
+    # Funktion zum Anlegen eines neuen Attributes
+    # Bug: Wenn Spaltenname "Testattribut" angegeben wird -> Feld existiert nicht
     def on_attribut_anlegen_clicked(self):
         # Prüfen ob Attribute ausgewählt wurden
         attribut = self.lineEdit.text()
@@ -1347,6 +1353,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         self.neues_feld_anlegen(self.new_layer, attribut, typ)
         self.log_attribute("manuell")
 
+    # Neue Spalte in der Attributtabelle anlegen
     def neues_feld_anlegen(self, new_layer, attribut, typ):
         # Prüfen, ob Feld schon existiert
         if attribut in [f.name() for f in new_layer.fields()]:
@@ -1393,7 +1400,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             self.mapCanvas.setLayers([])
             self.mapCanvas.refresh()
 
-            # Log
+            # Layer Informationen loggen
             self.log.set_layer_info(
                 punkt_layer = self.mMapLayerComboBox_Daten.currentText(),
                 parzellen_layer = self.mMapLayerComboBox_Parzellen.currentText() if self.mMapLayerComboBox_Parzellen.currentText() else "Nicht angegeben",
@@ -1481,8 +1488,6 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 # Änderungen speichern und Bearbeitung beenden
                 self.new_layer.commitChanges() # Änderungen speichern und Bearbeitung beenden
                 self.on_SymbButton_clicked()
-        
-        # self.log_kenngroessen()
 
         self.parzellen_layer_check(False)
 
@@ -1490,8 +1495,6 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         typ = ["Ganzzahl", "Dezimalzahl", "String"]
         self.comboBoxDatentyp.addItems(typ)
         self.comboBoxDatentyp.setEnabled(True)
-        
-        
         
     def on_back_button_clicked(self):
         aw = QMessageBox.question(self, 'Bestätigung', 

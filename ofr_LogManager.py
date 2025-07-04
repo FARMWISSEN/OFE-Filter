@@ -38,16 +38,16 @@ class LogManager:
         self.data["plugin"]["name"] = name
         self.data["plugin"]["version"] = version
 
-    # Speichert Layerinformationen (z.B. Feldgrenze)
+    # Speichert Layerinformationen, bspw. Parzellen-Layer, Punkt-Layer, ...
     def set_layer_info(self, **kwargs):
         self.data["layers"].update(kwargs)
 
-    # Protokolliert eine Aktion (z. B. "Filter: Standardabweichung")
+    # Protokolliert eine Aktion
     def log_event(self, action_type: str, details: dict):
         entry = {
             "timestamp": datetime.now().strftime("%d.%m.%Y_%H-%M-%S"),
             "type": action_type,
-            "details": details # Dictionary mit statistischen Kennwerten
+            "details": details
         }
 
         # Überprüfen, ob letzter Eintrag identisch zu neuem Eintrag ist (versehentlicher Doppelclick Button)
@@ -62,7 +62,7 @@ class LogManager:
 
         self.data["actions"].append(entry)
 
-    # Fügt statistische Informationen zu einem Attribut hinzu (z. B. Mittelwert)
+    # Fügt statistische Informationen zu einer geloggten "aktion" 
     def log_statistic(self, attribute_r: str, stats_r: dict, attribute_f:str, stats_f: dict, id):
         self.data["statistics"].append({
             "timestamp": datetime.now().strftime("%d.%m.%Y_%H-%M-%S"),
@@ -73,9 +73,10 @@ class LogManager:
             "Werte gefilter": stats_f
         })
 
+    # Entfernt den zuletzt passenden Logeintrag "action" basierend auf Typ, Attribut, Methode und Wert
     def remove_action_by_parameters(self, aktionstyp, typ, attribut, methode, wert):
-    # Entfernt den zuletzt passenden Logeintrag basierend auf Attribut, Methode und Typ
-        for i in reversed(range(len(self.data["actions"]))):  # Rückwärts durchgehen
+        # Geht "actions" rückwärts durch
+        for i in reversed(range(len(self.data["actions"]))):
             action = self.data["actions"][i]
             if (
                 action["type"] == aktionstyp and
@@ -84,24 +85,26 @@ class LogManager:
                 action["details"].get("Methode:") == methode and
                 action["details"].get("Wert:") == wert
             ):
+                # ID für zugehörige Statistik zurückgeben
                 id = action["details"].get("ID")
                 self.data["actions"].pop(i)
                 return id
         return None
-            
+
+    # Entfernt den zuletzt passenden Logeintrag "statistics" basierend auf ID
     def remove_by_id(self, id:str):
-        # Aktion entfernen
         self.data["statistics"] = [
             stat for stat in self.data["statistics"]
             if stat.get("ID") != id
     ]
 
     def write_logs(self):
-        # Schreibt die gesamte Logstruktur in eine JSON-Datei
+        # Schreibt die gesamte Logstruktur in JSON-Datei
         with open(self.json_path, "w", encoding="utf-8") as f:
             json.dump(self.data, f, indent=4, ensure_ascii=False)
 
         # Schreibt alle Aktionen in eine CSV-Datei (einfache Nachvollziehbarkeit)
+        # To-Do: evtl. schönere Darstellung
         with open(self.csv_path, "w", newline='', encoding="utf-8") as f:
             writer = csv.writer(f, delimiter=";")
             writer.writerow(["Zeit", "Typ", "Details"])

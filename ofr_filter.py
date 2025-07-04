@@ -100,7 +100,6 @@ class OFRFilter:
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('OFRFilter', message)
 
-
     def add_action(
         self,
         icon_path,
@@ -188,7 +187,6 @@ class OFRFilter:
         # will be set False in run()
         self.first_start = True
 
-
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
@@ -196,7 +194,6 @@ class OFRFilter:
                 self.tr(u'&OFR Filter'),
                 action)
             self.iface.removeToolBarIcon(action)
-
 
     def run(self):
         """Run method that performs all the real work"""
@@ -227,7 +224,6 @@ class OFRFilter:
         self.dlg.show()       
         
         result = self.dlg.exec_()
- 
 
     ###################
     ### Daten laden ###
@@ -372,7 +368,6 @@ class OFRFilter:
         else:
             return
 
-    
     #########################
     ### Daten zuschneiden ###
     #########################
@@ -699,7 +694,7 @@ class OFRFilter:
         # Karte aktualisieren
         self.dlg.update_map_zuschneiden_new_layer()
 
-    
+
     def polygon_selection(self, new_layer):
         """Aktiviert das eingebaute Werkzeug 'Objekte über Polygon wählen' und zeigt ein nicht-modales Dialogfenster zur Bestätigung an."""
 
@@ -799,7 +794,6 @@ class OFRFilter:
         # Karte aktualisieren
         self.dlg.update_map_zuschneiden_new_layer()
 
-        
     #####################    
     ### Daten Filtern ###
     #####################
@@ -891,8 +885,7 @@ class OFRFilter:
         
         # Erstelle ein DataFrame mit leeren Listen für jede Gruppe/Feature-Kombination
         self.filter_punktauswahl = pd.DataFrame({'Werte': [[] for _ in range(len(index))]}, index=index)
-        
-        
+
     def combine_filter_punktauswahl(self, new_layer):
         """ Führt alle Listen aus dem MultiIndex DataFrame filter_punktauswahl zusammen,
         entfernt Duplikate und sortiert die finale Liste in aufsteigender Reihenfolge."""
@@ -977,10 +970,7 @@ class OFRFilter:
 
         # Speichere die Anzahl der ausgewählten Zeilen in auswahl_tabelle in der Zeile für 'Untergrenze'
         self.auswahl_tabelle.at[0, selected_column] = anzahl_ausgewaehlter_zeilen
-        
-        
-        
-    
+
     ###### Obergrenze ######
     def filterfunction_obergrenze(self, new_layer):
         """ Diese Funktion filtert die Attribute des Layers basierend auf der ausgewählten Spalte und der Obergrenze.
@@ -1178,7 +1168,6 @@ class OFRFilter:
 
             # Speichere die Anzahl der ausgewählten Zeilen in auswahl_tabelle in der Zeile für 'Standardabweichung'
             self.auswahl_tabelle.at[2, selected_column] = anzahl_ausgewaehlter_zeilen
-        
 
     #########################
     ### Attribute anfügen ###
@@ -1249,7 +1238,6 @@ class OFRFilter:
                         value = polygon_feature[field_name]
                         field_index = field_indexes[field_name]
                         new_layer.changeAttributeValue(point_id, field_index, value)
-                
 
         # 8. Änderungen speichern
         if not new_layer.commitChanges():
@@ -1387,8 +1375,7 @@ class OFRFilter:
                 
                 new_layer.commitChanges()
             else:
-                new_layer.removeSelection()
-            
+                new_layer.removeSelection()     
     
     ########################    
     ### Cleanup Function ###    TO DO: muss überarbeitet werden
