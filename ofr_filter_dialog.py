@@ -33,13 +33,14 @@ from qgis.PyQt.QtWidgets import QVBoxLayout
 from qgis.PyQt.QtWidgets import QMessageBox
 from qgis.utils import iface
 from PyQt5.QtCore import QVariant, Qt
-from PyQt5.QtWidgets import QTableWidgetItem, QVBoxLayout, QDialog, QHBoxLayout, QLabel, QComboBox, QPushButton, QFileDialog
+from PyQt5.QtWidgets import QTableWidgetItem, QVBoxLayout, QDialog, QHBoxLayout, QLabel, QComboBox, QPushButton, QFileDialog, QDoubleSpinBox, QCheckBox
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy as np
 import itertools
 import uuid
 from .ofr_LogManager import LogManager as log
+from .ofr_ueberlappung import UeberlappungFilter
 
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
@@ -146,9 +147,13 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Close-Status
         self.is_closing = False
         
-        # Für Testversion
-        self.tabWidget_Filter.setTabEnabled(2, False)
-        self.tabWidget_FilterViewer.setTabEnabled(2, False)
+        # Enable the overlap filter tab
+        self.tabWidget_Filter.setTabEnabled(2, True)
+        self.tabWidget_FilterViewer.setTabEnabled(2, False)  # Histogramm-Tab für Überlappungsfilter initial deaktivieren
+        
+        # Connect overlap filter buttons
+        self.overlap_button.clicked.connect(self.on_overlap_anwenden_clicked)
+        self.overlap_reset_button.clicked.connect(self.on_overlap_reset_clicked)
 
     ################################
     ### Daten laden, prüfen usw. ###
@@ -244,6 +249,9 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         # LogManager initialisieren
         self.log = log(self.mMapLayerComboBox_Daten.currentText(), QgsProject.instance().homePath())
         self.log.set_plugin_info(self.plugin_name, self.plugin_version)
+        
+        # Populate the timestamp combo box for the overlap filter
+        self.populate_timestamp_combo()
 
     def update_button_states(self):
         """Aktualisiert den Aktivierungsstatus der Buttons basierend auf den ausgewählten Layern."""
@@ -341,7 +349,6 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         # OpenStreetMap XYZ-Kachelkarte als Hintergrund hinzufügen
         url_with_params = 'type=xyz&url=https://tile.openstreetmap.org/{z}/{x}/{y}.png&zmax=19&zmin=0'
         self.osm_layer = QgsRasterLayer(url_with_params, 'OpenStreetMap', 'wms')
-        print("OSM")
 
         # Überprüfe, ob der Layer gültig ist
         if self.osm_layer.isValid():
@@ -349,7 +356,6 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             self.background_layer = self.osm_layer
             # Füge den Layer explizit zur MapCanvas hinzu
             self.mapCanvas.setLayers([self.background_layer])
-            print("layer hinzugrfügt")
         else:
             print("OpenStreetMap layer ist nicht gültig")
 
@@ -364,13 +370,31 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Erstelle den Punkt und transformiere ihn
         point_4326 = QgsPointXY(lon, lat)
         point_3857 = coordinate_transform.transform(point_4326)
-        print(point_3857)
 
         # Zoome auf die transformierte Koordinate
         self.mapCanvas.setExtent(QgsRectangle(point_3857.x() - 250, point_3857.y() - 250, point_3857.x() + 250, point_3857.y() + 250))
         self.mapCanvas.refresh()
-        print("fertig")
-        print( self.background_layer == None)
+        
+        # Initialisiere auch die zweite Karte (mapWidget2)
+        self.mapCanvas2 = QgsMapCanvas()
+        self.mapCanvas2.setCanvasColor(Qt.white)
+        self.layout_map2 = QVBoxLayout(self.mapWidget2)
+        self.layout_map2.addWidget(self.mapCanvas2)
+        
+        # Setze den Ziel-CRS des zweiten MapCanvas auf EPSG:3857 (Web Mercator)
+        self.mapCanvas2.setDestinationCrs(epsg_3857)
+        
+        # Pan-Werkzeug für die zweite Karte
+        self.pan_tool2 = QgsMapToolPan(self.mapCanvas2)
+        self.mapCanvas2.setMapTool(self.pan_tool2)
+        
+        # Füge den Hintergrundlayer auch zur zweiten Karte hinzu
+        if self.osm_layer.isValid():
+            self.mapCanvas2.setLayers([self.background_layer])
+            
+        # Zoome auf die gleiche Koordinate
+        self.mapCanvas2.setExtent(QgsRectangle(point_3857.x() - 250, point_3857.y() - 250, point_3857.x() + 250, point_3857.y() + 250))
+        self.mapCanvas2.refresh()
 
        
     def fill_map_widget_zuschneiden(self):
@@ -637,6 +661,30 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             # Multiindex Dataframe für filterbasierte Punktauswahl erstellen
             self.plugin_instance.create_multiindex_punktauswahl(self.new_layer)
 
+    def update_map_widget2(self):
+        """Aktualisiert die zweite Karte (mapWidget2) mit den aktuellen Layern und Auswahl."""
+        if not hasattr(self, 'mapCanvas2') or not hasattr(self, 'new_layer'):
+            return
+            
+        # Stelle sicher, dass die Hintergrundkarte immer enthalten ist
+        layers_to_add = [self.background_layer] if hasattr(self, 'background_layer') and self.background_layer else []
+        
+        # Füge den new_layer hinzu
+        layers_to_add.append(self.new_layer)
+        
+        # Setze die Layer in der Karte
+        self.mapCanvas2.setLayers(layers_to_add)
+        
+        # Zoome auf den new_layer
+        layer_crs = self.new_layer.crs()
+        transform_context = QgsProject.instance().transformContext()
+        epsg_3857 = QgsCoordinateReferenceSystem("EPSG:3857")
+        coordinate_transform = QgsCoordinateTransform(layer_crs, epsg_3857, transform_context)
+        
+        transformed_extent = coordinate_transform.transformBoundingBox(self.new_layer.extent())
+        self.mapCanvas2.setExtent(transformed_extent)
+        self.mapCanvas2.refresh()
+    
     def create_histograms(self):
         # Nicht durchführen, wenn geschlossen wird
         if self.is_closing:
@@ -644,6 +692,9 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # Hole den Spaltennamen aus der ComboBox
         column_name = self.columnComboBox2.currentText()
+        
+        # Aktualisiere die zweite Karte
+        self.update_map_widget2()
 
         # Prüfen, ob der Tab "Ober- und Untergrenze-Filter" ausgewählt ist
         if self.tabWidget_Filter.currentIndex() == 0 and self.tabWidget.currentIndex() == 1:
@@ -820,6 +871,60 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             else: 
                 self.raw_stat.setText(f"Mittelwert: {round(np.mean(values), 2)}; Standardabweichung: {round(np.std(values), 2)}; Min: {round(np.min(values), 2)}; Max: {round(np.max(values), 2)}")
                 self.filter_stat.setText(f"Mittelwert: {round(np.mean(filtered_values), 2)}; Standardabweichung: {round(np.std(filtered_values), 2)}; Min: {round(np.min(filtered_values), 2)}; Max: {round(np.max(filtered_values), 2)}")
+        
+        # Prüfen, ob der Tab "Überlappungsfilter" ausgewählt ist
+        elif self.tabWidget_Filter.currentIndex() == 2 and self.tabWidget.currentIndex() == 1:
+            # Hole die Daten aus dem Layer und konvertiere sie in float, wenn möglich
+            values = [float(feat[column_name]) for feat in self.new_layer.getFeatures() if feat[column_name] is not None and self.is_numeric(feat[column_name])]
+
+            if self.checkBox_hist.isChecked() or True:  # Immer alle Filter anzeigen für Überlappungsfilter
+                alle_filter_punkte = self.plugin_instance.punktauswahl_gesamt               
+                alle_filter_punkte_flat = list(itertools.chain.from_iterable(alle_filter_punkte)) if any(isinstance(i, list) for i in alle_filter_punkte) else alle_filter_punkte               
+                alle_filter_punkte_set = set(alle_filter_punkte_flat)
+                
+                # Erstelle die gefilterten Daten
+                filtered_values = []
+                for feat in self.new_layer.getFeatures():
+                    feat_id = feat.id()
+                    if feat_id not in alle_filter_punkte_set and feat[column_name] is not None and self.is_numeric(feat[column_name]):
+                        filtered_values.append(float(feat[column_name])) 
+            
+            # Falls das Histogramm-Canvas noch nicht existiert, erzeuge es
+            if not hasattr(self, 'histogram_canvas'):
+                self.figure = Figure(figsize=(10, 5), dpi=100)
+                self.histogram_canvas = FigureCanvas(self.figure)
+                self.histogram_layout = QVBoxLayout(self.histogramm)  # Layout für das Widget
+                self.histogram_layout.addWidget(self.histogram_canvas)
+
+            # Bereite die Achsen für zwei Histogramme vor
+            self.figure.clear()
+            self.figure.subplots_adjust(wspace=0.3)  # Erhöht den horizontalen Abstand (Standard ist 0.2)
+            
+            axes1 = self.figure.add_subplot(121)  # Linkes Histogramm
+            axes2 = self.figure.add_subplot(122)  # Rechtes Histogramm
+
+            # Plot des ersten Histogramms (Rohdaten)
+            counts, bins, _ = axes1.hist(values, bins=50, color='blue', edgecolor='black')
+            axes1.set_title(f"Rohdaten: {column_name}")
+
+            # Plot des zweiten Histogramms (gefiltert)
+            counts_filtered, bins_filtered, _ = axes2.hist(filtered_values, bins=50, color='blue', edgecolor='black')
+            axes2.set_title(f"Überlappungsfilter: {column_name}")
+            
+            # Aktualisiere die Anzeige des Canvas
+            self.histogram_canvas.draw()
+
+            # Deskriptive Statistik
+            selected_features = self.new_layer.selectedFeatures()  # Holen der aktuell ausgewählten Features           
+            count = len(selected_features)
+            total_points = self.new_layer.featureCount()
+            
+            if count + 3 >= total_points:
+                self.raw_stat.setText(f"Mittelwert: {round(np.mean(values), 2)}; Standardabweichung: {round(np.std(values), 2)}; Min: {round(np.min(values), 2)}; Max: {round(np.max(values), 2)}")
+                self.filter_stat.setText("Nicht genügend Punkte übrig")
+            else: 
+                self.raw_stat.setText(f"Mittelwert: {round(np.mean(values), 2)}; Standardabweichung: {round(np.std(values), 2)}; Min: {round(np.min(values), 2)}; Max: {round(np.max(values), 2)}")
+                self.filter_stat.setText(f"Mittelwert: {round(np.mean(filtered_values), 2)}; Standardabweichung: {round(np.std(filtered_values), 2)}; Min: {round(np.min(filtered_values), 2)}; Max: {round(np.max(filtered_values), 2)}")
 
     #self.filter_stat.setText(f"Mittelwert: {round(np.mean(filtered_values), 2)}; Standardabweichung: {round(np.std(filtered_values), 2)}; Min: {round(np.min(filtered_values), 2)}; Max: {round(np.max(filtered_values), 2)}")
 
@@ -830,6 +935,181 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             return True
         except (ValueError, TypeError):
             return False
+            
+    # The setup_overlap_tab method is no longer needed as the UI elements are defined in the UI file
+    
+    def populate_timestamp_combo(self):
+        """Populate the timestamp combo box with field names."""
+        if not hasattr(self, 'timestamp_combo') or not hasattr(self, 'new_layer'):
+            return
+            
+        self.timestamp_combo.clear()
+        
+        # Populate timestamp combo with field names
+        has_timestamp_fields = False
+        for field in self.new_layer.fields():
+            field_name = field.name()
+            # Try to identify timestamp fields by common names
+            if any(keyword in field_name.lower() for keyword in ['time', 'date', 'zeit', 'datum', 'timestamp']):
+                self.timestamp_combo.insertItem(0, field_name)  # Add at the beginning
+                has_timestamp_fields = True
+            else:
+                self.timestamp_combo.addItem(field_name)  # Add at the end
+        
+        # Select the first item if we found timestamp fields
+        if has_timestamp_fields:
+            self.timestamp_combo.setCurrentIndex(0)
+    
+    def on_overlap_anwenden_clicked(self):
+        """Apply the overlap filter with the current settings."""
+        if not hasattr(self, 'new_layer') or self.new_layer is None:
+            QMessageBox.warning(self, "Fehler", "Bitte laden Sie zuerst einen Punktdatensatz.")
+            return
+        
+        # Create a filter instance
+        from .ofr_ueberlappung import UeberlappungFilter
+        filter = UeberlappungFilter(self.new_layer, self)
+        
+        # Prepare data
+        if not filter.prepare_data():
+            QMessageBox.critical(self, "Fehler", "Fehler bei der Datenvorbereitung.")
+            return
+        
+        # Set parameters
+        filter.timestamp_field = self.timestamp_combo.currentText()
+        filter.max_timedelta = self.timedelta_spin.value()
+        filter.working_width = self.width_spin.value()
+        filter.tolerance = self.tolerance_spin.value()
+        
+        # Update status
+        self.count_overlap_label.setText("Filter wird ausgeführt...")
+        self.count_overlap_label.repaint()  # Force immediate update
+        
+        # Process timestamps and create paths
+        if not filter.process_timestamps():
+            QMessageBox.critical(self, "Fehler", 
+                "Fehler bei der Zeitstempelverarbeitung. Bitte überprüfen Sie das Format der Zeitstempel.")
+            self.count_overlap_label.setText("Fehler bei der Verarbeitung")
+            return
+        
+        # Detect overlaps
+        if not filter.detect_overlaps():
+            QMessageBox.critical(self, "Fehler", "Fehler bei der Überlappungserkennung.")
+            self.count_overlap_label.setText("Fehler bei der Verarbeitung")
+            return
+        
+        # Filter zero values if checkbox is checked
+        if self.zero_filter_check.isChecked() and self.columnComboBox2.currentText():
+            filter.filter_zero_values(self.columnComboBox2.currentText())
+        
+        # Get filtered IDs
+        filtered_ids = filter.get_filtered_ids()
+        
+        # Select the filtered points in the layer
+        if filtered_ids:
+            self.new_layer.selectByIds(filtered_ids)
+            
+            # Add these IDs to the plugin_instance's punktauswahl_gesamt
+            if not hasattr(self.plugin_instance, 'punktauswahl_gesamt'):
+                self.plugin_instance.punktauswahl_gesamt = []
+            
+            self.plugin_instance.punktauswahl_gesamt.extend(filtered_ids)
+            self.plugin_instance.punktauswahl_gesamt = list(set(self.plugin_instance.punktauswahl_gesamt))  # Remove duplicates
+            
+            # Update the selection count label
+            self.label_auswahl.setText(f"Anzahl ausgewählter Punkte: {len(self.plugin_instance.punktauswahl_gesamt)}")
+            self.label_auswahl_rel.setText(
+                f"Relativer Anteil ausgewählter Punkte: {round(len(self.plugin_instance.punktauswahl_gesamt) / self.new_layer.featureCount() * 100, 2)}%"
+            )
+            
+            # Update the overlap count label
+            stats = filter.get_statistics()
+            self.count_overlap_label.setText(
+                f"{stats['filtered_points']} Punkte ({stats['filtered_percentage']}%)"
+            )
+            
+            # Log the event
+            self.log.log_event("Überlappung", {
+                "Zeitstempelspalte": filter.timestamp_field,
+                "Max. Zeitdifferenz": str(filter.max_timedelta),
+                "Arbeitsbreite": str(filter.working_width),
+                "Toleranz": str(filter.tolerance),
+                "Gefilterte Punkte": str(stats['filtered_points']),
+                "Prozent gefiltert": f"{stats['filtered_percentage']}%"
+            })
+            
+            # Aktiviere den Histogramm-Tab und Karten-Tab
+            self.tabWidget_FilterViewer.setTabEnabled(2, True)
+            self.tabWidget_FilterViewer.setCurrentIndex(2)
+            
+            # Update histograms and map
+            self.create_histograms()
+        else:
+            self.count_overlap_label.setText("Keine Überlappungen gefunden")
+    
+    def on_overlap_reset_clicked(self):
+        """Reset the overlap filter."""
+        # Remove overlap-filtered points from the selection
+        if hasattr(self.plugin_instance, 'punktauswahl_gesamt') and hasattr(self, 'new_layer'):
+            # We don't know exactly which points were from the overlap filter, so we just clear the selection
+            # and recreate it from the other filters
+            self.plugin_instance.punktauswahl_gesamt = []
+            
+            # Re-apply other filters if they exist
+            selected_column = self.columnComboBox2.currentText()
+            if hasattr(self.plugin_instance, 'filter_punktauswahl') and selected_column:
+                # Get points from other filters
+                untergrenze_indices = self.plugin_instance.filter_punktauswahl.loc['Untergrenze', selected_column].tolist()
+                obergrenze_indices = self.plugin_instance.filter_punktauswahl.loc['Obergrenze', selected_column].tolist()
+                sd_indices = self.plugin_instance.filter_punktauswahl.loc['Standardabweichung', selected_column].tolist()
+                
+                # Flatten lists if needed
+                import itertools
+                untergrenze_indices_flat = list(itertools.chain.from_iterable(untergrenze_indices)) if any(isinstance(i, list) for i in untergrenze_indices) else untergrenze_indices
+                obergrenze_indices_flat = list(itertools.chain.from_iterable(obergrenze_indices)) if any(isinstance(i, list) for i in obergrenze_indices) else obergrenze_indices
+                sd_indices_flat = list(itertools.chain.from_iterable(sd_indices)) if any(isinstance(i, list) for i in sd_indices) else sd_indices
+                
+                # Combine all filter indices
+                all_indices = untergrenze_indices_flat + obergrenze_indices_flat + sd_indices_flat
+                self.plugin_instance.punktauswahl_gesamt = list(set(all_indices))  # Remove duplicates
+            
+            # Update selection in layer
+            if self.plugin_instance.punktauswahl_gesamt:
+                self.new_layer.selectByIds(self.plugin_instance.punktauswahl_gesamt)
+            else:
+                self.new_layer.removeSelection()
+            
+            # Update labels
+            if self.plugin_instance.punktauswahl_gesamt:
+                self.label_auswahl.setText(f"Anzahl ausgewählter Punkte: {len(self.plugin_instance.punktauswahl_gesamt)}")
+                self.label_auswahl_rel.setText(
+                    f"Relativer Anteil ausgewählter Punkte: {round(len(self.plugin_instance.punktauswahl_gesamt) / self.new_layer.featureCount() * 100, 2)}%"
+                )
+            else:
+                self.label_auswahl.setText("keine Filter angewand")
+                self.label_auswahl_rel.setText("")
+        
+        # Reset the overlap count label
+        self.count_overlap_label.setText("")
+        
+        # Wenn keine Filter mehr aktiv sind, deaktiviere den Histogramm-Tab
+        if not self.plugin_instance.punktauswahl_gesamt or len(self.plugin_instance.punktauswahl_gesamt) == 0:
+            self.tabWidget_FilterViewer.setTabEnabled(2, False)
+            self.tabWidget_FilterViewer.setCurrentIndex(0)  # Wechsle zum ersten Tab
+        else:
+            # Update histograms
+            self.create_histograms()
+        
+        # Log the event
+        self.log.log_event("Überlappung", {"Aktion": "Filter zurückgesetzt"})
+    
+    def on_start_overlap_clicked(self):
+        """Switch to the overlap tab when the button is clicked."""
+        # Switch to the Filter tab
+        self.tabWidget.setCurrentIndex(1)
+        
+        # Switch to the Overlap sub-tab
+        self.tabWidget_Filter.setCurrentIndex(2)
 
     # Funktion zum Speichern des Histogramms
     def save_histogram(self):
@@ -881,7 +1161,10 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Aktualisiere die Gesamtauswahl
         self.plugin_instance.combine_filter_punktauswahl(self.new_layer)
         
-        # Aktualisiere die Anzeige des Canvas
+        # Aktiviere den Histogramm-Tab und Karten-Tab
+        self.tabWidget_FilterViewer.setTabEnabled(2, True)
+        
+        # Aktualisiere die Anzeige des Canvas und der zweiten Karte
         self.create_histograms()
 
         self.log_untergrenze(id)
@@ -924,6 +1207,11 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Aktualisiere die Gesamtauswahl
         self.plugin_instance.combine_filter_punktauswahl(self.new_layer)
         
+        # Prüfe, ob noch Filter aktiv sind
+        if not self.plugin_instance.punktauswahl_gesamt or len(self.plugin_instance.punktauswahl_gesamt) == 0:
+            self.tabWidget_FilterViewer.setTabEnabled(2, False)
+            self.tabWidget_FilterViewer.setCurrentIndex(0)  # Wechsle zum ersten Tab
+        
         # Aktualisiere die Anzeige des Canvas
         self.create_histograms()
     
@@ -962,7 +1250,10 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Aktualisiere die Gesamtauswahl
         self.plugin_instance.combine_filter_punktauswahl(self.new_layer)
         
-        # Aktualisiere die Anzeige des Canvas
+        # Aktiviere den Histogramm-Tab und Karten-Tab
+        self.tabWidget_FilterViewer.setTabEnabled(2, True)
+        
+        # Aktualisiere die Anzeige des Canvas und der zweiten Karte
         self.create_histograms()
 
         self.log_obergrenze(id)
@@ -1001,6 +1292,11 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # Aktualisiere die Gesamtauswahl
         self.plugin_instance.combine_filter_punktauswahl(self.new_layer)
+        
+        # Prüfe, ob noch Filter aktiv sind
+        if not hasattr(self.plugin_instance, 'punktauswahl_gesamt') or not self.plugin_instance.punktauswahl_gesamt or len(self.plugin_instance.punktauswahl_gesamt) == 0:
+            self.tabWidget_FilterViewer.setTabEnabled(2, False)
+            self.tabWidget_FilterViewer.setCurrentIndex(0)  # Wechsle zum ersten Tab
         
         # Aktualisiere die Anzeige des Canvas
         self.create_histograms()
@@ -1052,7 +1348,10 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Aktualisiere die Gesamtauswahl
         self.plugin_instance.combine_filter_punktauswahl(self.new_layer)
         
-        # Aktualisiere die Anzeige des Canvas
+        # Aktiviere den Histogramm-Tab und Karten-Tab
+        self.tabWidget_FilterViewer.setTabEnabled(2, True)
+        
+        # Aktualisiere die Anzeige des Canvas und der zweiten Karte
         self.create_histograms()
 
         self.log_sd(id)
@@ -1093,6 +1392,11 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # Aktualisiere die Gesamtauswahl
         self.plugin_instance.combine_filter_punktauswahl(self.new_layer)
+        
+        # Prüfe, ob noch Filter aktiv sind
+        if not hasattr(self.plugin_instance, 'punktauswahl_gesamt') or not self.plugin_instance.punktauswahl_gesamt or len(self.plugin_instance.punktauswahl_gesamt) == 0:
+            self.tabWidget_FilterViewer.setTabEnabled(2, False)
+            self.tabWidget_FilterViewer.setCurrentIndex(0)  # Wechsle zum ersten Tab
         
         # Aktualisiere die Anzeige des Canvas
         self.create_histograms()
@@ -1626,6 +1930,11 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 self.mapCanvas.setLayers([])
                 self.mapCanvas.refresh()
                 
+                # Leere auch die zweite Karte, falls sie existiert
+                if hasattr(self, 'mapCanvas2'):
+                    self.mapCanvas2.setLayers([])
+                    self.mapCanvas2.refresh()
+                
                 # Histogramme zurücksetzen
                 if hasattr(self, 'figure'):
                     self.figure.clear() # Löscht den Inhalt der Figur (die erstellten Histogramme)
@@ -1699,6 +2008,11 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 # Leere die Layer vom MapCanvas und aktualisiere es
                 self.mapCanvas.setLayers([])
                 self.mapCanvas.refresh()
+                
+                # Leere auch die zweite Karte, falls sie existiert
+                if hasattr(self, 'mapCanvas2'):
+                    self.mapCanvas2.setLayers([])
+                    self.mapCanvas2.refresh()
                 
                 iface.mapCanvas().refresh()
                     
