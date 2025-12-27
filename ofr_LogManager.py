@@ -1,0 +1,116 @@
+import os
+import json
+import csv
+from datetime import datetime
+from qgis.core import QgsProject
+
+class LogManager:
+    def __init__(self, layer_source: str, project_path: str):
+        # Zeitstempel für die Log-Datei
+        timestamp = datetime.now().strftime("%d.%m.%Y_%H-%M-%S")
+        self.base_name = f"Filter_log_{layer_source}_{timestamp}"
+
+        # Verzeichnis für Logs im Projektverzeichnis anlegen
+        self.log_dir = os.path.join(project_path, "Logs")
+        os.makedirs(self.log_dir, exist_ok=True)
+
+        # Pfade für JSON- und CSV-Logdateien
+        self.json_path = os.path.join(self.log_dir, self.base_name + ".json")
+        self.csv_path = os.path.join(self.log_dir, self.base_name + ".csv")
+
+        # Initiale Logdatenstruktur
+        self.data = {
+            "plugin": {
+                "name": "",
+                # Gibt es schon eine Version?
+                "version": "",
+                "timestamp": timestamp
+            },
+            "project": {
+                "name": QgsProject.instance().fileName().rsplit('/', 1)[1]
+            },
+            "layers": {},
+            "actions": [],
+            "statistics": []
+        }
+
+    def set_plugin_info(self, name, version):
+        self.data["plugin"]["name"] = name
+        self.data["plugin"]["version"] = version
+
+    # Speichert Layerinformationen, bspw. Parzellen-Layer, Punkt-Layer, ...
+    def set_layer_info(self, **kwargs):
+        self.data["layers"].update(kwargs)
+
+    # Protokolliert eine Aktion
+    def log_event(self, action_type: str, details: dict):
+        entry = {
+            "timestamp": datetime.now().strftime("%d.%m.%Y_%H-%M-%S"),
+            "type": action_type,
+            "details": details
+        }
+
+        # Überprüfen, ob letzter Eintrag identisch zu neuem Eintrag ist (versehentlicher Doppelclick Button)
+        if self.data["actions"]:
+            last_entry = self.data["actions"][-1].copy()
+            last_entry["timestamp"] = None  # Timestamp ignorieren für Vergleich
+            new_entry_comp = entry.copy()
+            new_entry_comp["timestamp"] = None
+
+            if last_entry == new_entry_comp:
+                return
+
+        self.data["actions"].append(entry)
+
+    # Fügt statistische Informationen zu einer geloggten "aktion" 
+    def log_statistic(self, attribute_r: str, stats_r: dict, attribute_f:str, stats_f: dict, id):
+        self.data["statistics"].append({
+            "timestamp": datetime.now().strftime("%d.%m.%Y_%H-%M-%S"),
+            "ID": id,
+            "Daten gesamt:": attribute_r,
+            "Werte gesamt": stats_r,
+            "Daten gefiltert:": attribute_f,
+            "Werte gefilter": stats_f
+        })
+
+    # Entfernt den zuletzt passenden Logeintrag "action" basierend auf Typ, Attribut, Methode und Wert
+    def remove_action_by_parameters(self, aktionstyp, typ, attribut, methode, wert):
+        # Geht "actions" rückwärts durch
+        for i in reversed(range(len(self.data["actions"]))):
+            action = self.data["actions"][i]
+            if (
+                action["type"] == aktionstyp and
+                action["details"].get("Typ:") == typ and
+                action["details"].get("Attribut:") == attribut and
+                action["details"].get("Methode:") == methode and
+                action["details"].get("Wert:") == wert
+            ):
+                # ID für zugehörige Statistik zurückgeben
+                id = action["details"].get("ID")
+                self.data["actions"].pop(i)
+                return id
+        return None
+
+    # Entfernt den zuletzt passenden Logeintrag "statistics" basierend auf ID
+    def remove_by_id(self, id:str):
+        self.data["statistics"] = [
+            stat for stat in self.data["statistics"]
+            if stat.get("ID") != id
+    ]
+
+    def write_logs(self):
+        # Schreibt die gesamte Logstruktur in JSON-Datei
+        with open(self.json_path, "w", encoding="utf-8") as f:
+            json.dump(self.data, f, indent=4, ensure_ascii=False)
+
+        # Schreibt alle Aktionen in eine CSV-Datei (einfache Nachvollziehbarkeit)
+        # To-Do: evtl. schönere Darstellung
+        with open(self.csv_path, "w", newline='', encoding="utf-8") as f:
+            writer = csv.writer(f, delimiter=";")
+            writer.writerow(["Zeit", "Typ", "Details"])
+            for entry in self.data["actions"]:
+                writer.writerow([
+                    entry["timestamp"],
+                    entry["type"],
+                    json.dumps(entry["details"], ensure_ascii=False)
+                ])

@@ -21,7 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt, QDate
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QMessageBox, QPushButton, QDialog, QVBoxLayout, QLabel, QInputDialog, QLineEdit
 from qgis.core import (
@@ -40,6 +40,7 @@ from .ofr_filter_dialog import OFRFilterDialog
 import os.path
 import pandas as pd
 import numpy as np
+from .ofr_LogManager import LogManager as log
 
 class OFRFilter:
     """QGIS Plugin Implementation."""
@@ -52,6 +53,11 @@ class OFRFilter:
             application at run time.
         :type iface: QgsInterface
         """
+
+        # Information for Logging
+        self.plugin_name = "OFR_Filter"
+        self.plugin_version = "0.0.2"
+
         # Save reference to the QGIS interface
         self.iface = iface
         
@@ -77,7 +83,9 @@ class OFRFilter:
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
         self.punktauswahl_gesamt =  []
+
     # noinspection PyMethodMayBeStatic
+
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
 
@@ -91,7 +99,6 @@ class OFRFilter:
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('OFRFilter', message)
-
 
     def add_action(
         self,
@@ -180,7 +187,6 @@ class OFRFilter:
         # will be set False in run()
         self.first_start = True
 
-
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
@@ -188,7 +194,6 @@ class OFRFilter:
                 self.tr(u'&OFR Filter'),
                 action)
             self.iface.removeToolBarIcon(action)
-
 
     def run(self):
         """Run method that performs all the real work"""
@@ -219,7 +224,6 @@ class OFRFilter:
         self.dlg.show()       
         
         result = self.dlg.exec_()
- 
 
     ###################
     ### Daten laden ###
@@ -364,7 +368,6 @@ class OFRFilter:
         else:
             return
 
-    
     #########################
     ### Daten zuschneiden ###
     #########################
@@ -439,6 +442,8 @@ class OFRFilter:
 
         # Rückmeldung über gelöschte Punkte
         QMessageBox.information(None, "Auf Feldgrenze zuschneiden", f"{deleted_count} Punkte wurden gelöscht.")
+
+        self.dlg.log.log_event("Zuschnitt",{"Fläche":"Feldgrenze", "Entfernte Punkte:":f"{deleted_count}"})
         
         # Symbolisierung des Layers updaten
         if deleted_count is not None:
@@ -517,6 +522,8 @@ class OFRFilter:
 
         # Rückmeldung über gelöschte Punkte
         QMessageBox.information(None, "Vorgewende abschneiden", f"{deleted_count} Punkte wurden gelöscht.")
+
+        self.dlg.log.log_event("Zuschnitt",{"Fläche":"Innenfläche", "Entfernte Punkte:":f"{deleted_count}"})
         
         # Symbolisierung des Layers updaten
         if deleted_count is not None:
@@ -596,6 +603,8 @@ class OFRFilter:
 
         # Rückmeldung über gelöschte Punkte
         QMessageBox.information(None, "Löschen von Punkten außerhalb der Parzellen", f"{deleted_count} Punkte wurden gelöscht.")
+
+        self.dlg.log.log_event("Zuschnitt",{"Fläche":"Parzelle", "Entfernte Punkte:":f"{deleted_count}"})
         
         # Symbolisierung des Layers updaten
         if deleted_count is not None:
@@ -674,7 +683,9 @@ class OFRFilter:
         deleted_count = len(ids_to_delete)
 
         # Rückmeldung über gelöschte Punkte
-        QMessageBox.information(None, "Löschen von Punkten in der Auschlussfläche", f"{deleted_count} Punkte wurden gelöscht.")
+        QMessageBox.information(None, "Löschen von Punkten in der Ausschlussfläche", f"{deleted_count} Punkte wurden gelöscht.")
+        
+        self.dlg.log.log_event("Zuschnitt",{"Fläche":"Ausschlussfläche", "Entfernte Punkte:":f"{deleted_count}"})
         
         # Symbolisierung des Layers updaten
         if deleted_count is not None:
@@ -683,7 +694,7 @@ class OFRFilter:
         # Karte aktualisieren
         self.dlg.update_map_zuschneiden_new_layer()
 
-    
+
     def polygon_selection(self, new_layer):
         """Aktiviert das eingebaute Werkzeug 'Objekte über Polygon wählen' und zeigt ein nicht-modales Dialogfenster zur Bestätigung an."""
 
@@ -762,6 +773,7 @@ class OFRFilter:
                 new_layer.commitChanges()
 
                 QMessageBox.information(None, "Löschung", f"{count} Punkte wurden gelöscht.")
+                self.dlg.log.log_event("Manueller Zuschnitt", {"Entfernte Punkte":f"{count}"})
             else:
                 # Auswahl aufheben
                 new_layer.removeSelection()
@@ -782,7 +794,6 @@ class OFRFilter:
         # Karte aktualisieren
         self.dlg.update_map_zuschneiden_new_layer()
 
-        
     #####################    
     ### Daten Filtern ###
     #####################
@@ -874,8 +885,7 @@ class OFRFilter:
         
         # Erstelle ein DataFrame mit leeren Listen für jede Gruppe/Feature-Kombination
         self.filter_punktauswahl = pd.DataFrame({'Werte': [[] for _ in range(len(index))]}, index=index)
-        
-        
+
     def combine_filter_punktauswahl(self, new_layer):
         """ Führt alle Listen aus dem MultiIndex DataFrame filter_punktauswahl zusammen,
         entfernt Duplikate und sortiert die finale Liste in aufsteigender Reihenfolge."""
@@ -960,10 +970,7 @@ class OFRFilter:
 
         # Speichere die Anzahl der ausgewählten Zeilen in auswahl_tabelle in der Zeile für 'Untergrenze'
         self.auswahl_tabelle.at[0, selected_column] = anzahl_ausgewaehlter_zeilen
-        
-        
-        
-    
+
     ###### Obergrenze ######
     def filterfunction_obergrenze(self, new_layer):
         """ Diese Funktion filtert die Attribute des Layers basierend auf der ausgewählten Spalte und der Obergrenze.
@@ -1161,7 +1168,6 @@ class OFRFilter:
 
             # Speichere die Anzahl der ausgewählten Zeilen in auswahl_tabelle in der Zeile für 'Standardabweichung'
             self.auswahl_tabelle.at[2, selected_column] = anzahl_ausgewaehlter_zeilen
-        
 
     #########################
     ### Attribute anfügen ###
@@ -1239,22 +1245,137 @@ class OFRFilter:
         else:
             new_layer.updateExtents()
             new_layer.triggerRepaint()
-            rp = QMessageBox.question(self.dlg, 'Attribute erfolgreich übertragen', 
-                                         'Attribute erfolgreich übertragen. Möchten Sie weitere Attribute übertragen?', 
-                                         QMessageBox.Yes | QMessageBox.No, 
-                                         QMessageBox.No)
-                
-            if rp == QMessageBox.Yes:
-                for i in range(self.dlg.mComboBox_Plots.count()):
-                    item = self.dlg.mComboBox_Plots.model().item(i)
-                    item.setCheckState(0)
-                return
-            else:
-                self.dlg.close()
+            self.dlg.populate_attribut_combobox(new_layer)
+            QMessageBox.information(self.dlg, 'Erfolg', 'Attribute erfolgreich übertragen.')                
   
+    def point_selection(self, new_layer):
+        """Aktiviert das eingebaute Werkzeug 'Objekte über Polygon wählen' und zeigt ein 
+        nicht-modales Dialogfenster zur Bestätigung an."""
 
-        
-    
+        # Den Layer "new_layer" aktivieren/auswählen
+        iface.setActiveLayer(new_layer)
+
+        # Werkzeug "Objekte über Polygon auswählen" aktivieren
+        iface.actionSelectPolygon().trigger()
+
+        # Nicht-modales Dialogfenster zur Bestätigung anzeigen
+        dialog = QDialog()
+        dialog.setWindowTitle("Auswahl bestätigen")
+
+        layout = QVBoxLayout()
+
+        label = QLabel("Zeichnen Sie mehrere Polygone, um Punkte auszuwählen. Klicken Sie " \
+        "auf 'Auswahl beenden', wenn Sie fertig sind.")
+        layout.addWidget(label)
+
+        confirm_button = QPushButton("Auswahl beenden")
+        confirm_button.clicked.connect(lambda: self.point_confirm_selection(dialog, new_layer))
+        layout.addWidget(confirm_button)
+
+        dialog.setLayout(layout)
+
+        # Setze das Dialogfenster permanent in den Vordergrund
+        dialog.setWindowFlag(Qt.WindowStaysOnTopHint)
+
+        dialog.setModal(False)  # Setze den Dialog als nicht-modal
+        dialog.show()
+
+        # # Speichern der IDs der aktuell ausgewählten Features
+        self.existing_selection = set(new_layer.selectedFeatureIds())
+
+        # # Hinzufügen einer Schaltfläche zum Hinzufügen zur Auswahl
+        add_to_selection_button = QPushButton("Zur Auswahl hinzufügen")
+        add_to_selection_button.clicked.connect(lambda: self.add_to_selection(new_layer))
+        layout.addWidget(add_to_selection_button)
+
+    def point_confirm_selection(self, dialog, new_layer):
+        """Bestätigt die Auswahl, zeigt die Anzahl der ausgewählten Punkte an und fragt, 
+        für welches Attribute die Werte überschrieben/bearbeitet werden sollen."""
+
+        selected_features = new_layer.selectedFeatures()
+
+        if selected_features:
+            count = len(selected_features)
+            total_points = new_layer.featureCount()  # Gesamtanzahl der Punkte im Layer
+
+            # Überprüfe, ob alle Punkte ausgewählt wurden
+            if count == total_points:
+                reply = QMessageBox.question(None, "Alle Punkte ausgewählt", "Es wurden alle Punkte ausgewählt. " \
+                                             "Möchten Sie fortfahren?",
+                                     QMessageBox.Yes | QMessageBox.No)
+                if reply == QMessageBox.No:
+                    new_layer.removeSelection()
+                    self.dlg.showNormal()
+                    return
+            
+            reply = QMessageBox.question(None, "Werte überschreiben?", f"{count} Punkte wurden ausgewählt. " \
+                                         "Möchten Sie die Werte dieser Punkte überschreiben?",
+                                         QMessageBox.Yes | QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                new_layer.startEditing()     
+                selected_column = self.dlg.columnComboBox_Attribute.currentText()
+                field_idx = new_layer.fields().indexOf(selected_column)
+                
+                if field_idx == -1:
+                    QMessageBox.warning(None, "Feld nicht existent", f"Das Feld {selected_column} existiert nicht!")
+                    return
+                
+                value_str, ok = QInputDialog.getText(None, "Wert eingeben", f"Gib den neuen Wert für das Feld {selected_column} ein:")
+                if not value_str:
+                    QMessageBox.warning(None, "Kein Wert eingegeben", "Bitte geben Sie einen Wert ein.")
+                    return
+                if not ok:
+                    return
+                
+                # Feldtyp überprüfen und ggf. Typ der Eingabe anpassen
+                field = new_layer.fields().field(field_idx)
+                field_type = field.type()
+
+                try:
+                    if field_type == QVariant.Int:
+                        value = int(value_str)
+                    elif field_type == QVariant.LongLong:
+                        try:
+                            value = int(value_str)
+                        except ValueError:
+                            QMessageBox.warning(None, "Fehler", "Bitte eine Zahl eingeben!")
+                            return
+                    elif field_type == QVariant.Double:
+                        value = float(value_str)
+                    elif field_type == QVariant.String:
+                        value = str(value_str)
+                    elif field_type == QVariant.Bool:
+                        value = value_str.lower() in ("1", "true", "ja", "yes")
+                    elif field_type == QVariant.Date:
+                        value = QDate.fromString(value_str, "yyyy-MM-dd")
+                        if not value.isValid():
+                            raise ValueError("Ungültiges Datum")
+                    else:
+                        # Fallback: als String einfügen (nicht optimal)
+                        value = str(value)
+
+                except Exception as e:
+                    QMessageBox.warning(None, "Fehler", f"Ungültiger Eingabewert für Typ {field_type}: {e}")
+                    return        
+                
+                for id in new_layer.selectedFeatureIds():
+                    success = new_layer.changeAttributeValue(id, field_idx, value)
+                    if not success:
+                        QMessageBox.warning(self, "Fehler", "Attribut konnte nicht geändert werden.")
+
+                # Frage nach weiterer Punkte-Auswahl
+                morePoints = QMessageBox.question(None, "Mehr Punkte?", "Sollen weitere Punkte für das Attribut " \
+                                         f"{selected_column} ausgewählt und geändert werden?",
+                                         QMessageBox.Yes | QMessageBox.No)
+                if morePoints == QMessageBox.No:
+                    dialog.accept()                    
+                    self.dlg.on_SymbButton_clicked()                    
+                    self.dlg.showNormal()
+                    iface.actionPan().trigger()
+                
+                new_layer.commitChanges()
+            else:
+                new_layer.removeSelection()     
     
     ########################    
     ### Cleanup Function ###    TO DO: muss überarbeitet werden

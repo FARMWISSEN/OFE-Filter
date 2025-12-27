@@ -27,17 +27,19 @@ import pandas as pd
 
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
-from qgis.core import QgsProject, QgsVectorLayer, QgsWkbTypes, QgsVectorFileWriter, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsRasterLayer, QgsProviderRegistry, QgsPointXY, QgsRectangle
+from qgis.core import QgsProject, QgsVectorLayer, QgsWkbTypes, QgsVectorFileWriter, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsRasterLayer, QgsProviderRegistry, QgsPointXY, QgsRectangle, QgsField
 from qgis.gui import QgsMapCanvas, QgsMapToolPan, QgsMapToolZoom
 from qgis.PyQt.QtWidgets import QVBoxLayout
 from qgis.PyQt.QtWidgets import QMessageBox
 from qgis.utils import iface
 from PyQt5.QtCore import QVariant, Qt
-from PyQt5.QtWidgets import QTableWidgetItem, QVBoxLayout, QDialog, QHBoxLayout, QLabel, QComboBox, QPushButton
+from PyQt5.QtWidgets import QTableWidgetItem, QVBoxLayout, QDialog, QHBoxLayout, QLabel, QComboBox, QPushButton, QFileDialog
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy as np
 import itertools
+import uuid
+from .ofr_LogManager import LogManager as log
 
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
@@ -49,6 +51,12 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self, ofr_filter_dir, plugin_instance, parent=None):
         """Initialisiert den Dialog und verknüpft GUI-Elemente mit Funktionen."""
         super(OFRFilterDialog, self).__init__(parent)
+
+        # Informationen für Logging
+        self.plugin_name = "OFR_Filter"
+        self.plugin_version = "0.0.4"
+        self.anzahl_punkte = None
+
         self.setupUi(self)
         self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)  # Setze Fenster-Flags für Minimieren- und Schließen-Button
         self.ofr_filter_dir = ofr_filter_dir  # Speichert den Pfad des Zielordners
@@ -67,10 +75,11 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         self.cutFB.clicked.connect(self.on_Vorgewende_abschneiden_clicked)
         self.cutPlot.clicked.connect(self.on_auf_Parzellen_zuschneiden_clicked)
         self.cutPoints.clicked.connect(self.on_polygon_selection_clicked)
+        self.pushButton_Auswahl_Attribut.clicked.connect(self.on_point_selection_clicked)
         self.cutAF.clicked.connect(self.on_af_ausschliessen_clicked)
-        self.exitButton.clicked.connect(self.on_exit_button_clicked)
+        self.exitButton.clicked.connect(self.on_cancel_button_clicked)
         self.SymbButton.clicked.connect(self.on_SymbButton_clicked)
-        self.exitButton2.clicked.connect(self.on_exit_button_clicked)
+        self.exitButton2.clicked.connect(self.on_cancel_button_clicked)
         self.WeiterButton.clicked.connect(self.on_weiter_button_clicked)
         self.BackButton.clicked.connect(self.on_back_button_clicked)
         self.untergrenze.clicked.connect(self.on_untergrenze_anwenden_clicked)
@@ -83,22 +92,27 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         self.pushButton_Beenden.clicked.connect(self.on_exit_button_clicked)
         self.WeiterButton2.clicked.connect(self.on_weiter_button_2_clicked)
         self.resetButton.clicked.connect(self.reset_filters)
-
+        self.pushButton_Attribut_anlegen.clicked.connect(self.on_attribut_anlegen_clicked)
+        self.pushButton_auswahl_Parzelle.clicked.connect(self.show_polygon_layer_selector)
+        self.BtnSaveHistogramm.clicked.connect(self.save_histogram)
         
         # Deaktivieren der ComboBoxen beim Start
         self.mMapLayerComboBox_Parzellen.setEnabled(False)
-        self.mMapLayerComboBox_Innenfaelche.setEnabled(False)
+        self.mMapLayerComboBox_Innenflaeche.setEnabled(False)
         self.mMapLayerComboBox_Feldgrenze.setEnabled(False)
         self.mMapLayerComboBox_AF.setEnabled(False)
         self.columnComboBox.setEnabled(False)
         self.mComboBox_Plots.setEnabled(False)
+        self.groupBox_fehlendeParzelle.setEnabled(False)
+        self.groupBox_fehlendeParzelle.hide()
+        self.comboBoxDatentyp.setEnabled(False)
 
         # Initialisieren der Buttons
         self.update_button_states()
 
         # Verknüpfen der ComboBox-Signale mit der Button-Aktivierungs- und Überprüfungsfunktion
         self.mMapLayerComboBox_Feldgrenze.currentIndexChanged.connect(self.on_combobox_changed)
-        self.mMapLayerComboBox_Innenfaelche.currentIndexChanged.connect(self.on_combobox_changed)
+        self.mMapLayerComboBox_Innenflaeche.currentIndexChanged.connect(self.on_combobox_changed)
         self.mMapLayerComboBox_Parzellen.currentIndexChanged.connect(self.on_combobox_changed)
         self.mMapLayerComboBox_AF.currentIndexChanged.connect(self.on_combobox_changed)
         self.mMapLayerComboBox_Daten.currentIndexChanged.connect(self.validate_and_update_buttons)
@@ -138,8 +152,13 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
 
     ################################
     ### Daten laden, prüfen usw. ###
-    ################################
-        
+    ################################        
+
+    def testPush(self):
+        text = str(self.mMapLayerComboBox_Daten.currentLayer())
+        QMessageBox.information(self, "Info", text)
+            
+
     def on_combobox_changed(self):
         self.validate_and_update_buttons()
         self.fill_map_widget_zuschneiden()
@@ -171,10 +190,10 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             return False
 
         # Überprüfen, ob der Innenfläche-Layer ein Polygonlayer ist
-        innenflaeche_layer = self.mMapLayerComboBox_Innenfaelche.currentLayer()
+        innenflaeche_layer = self.mMapLayerComboBox_Innenflaeche.currentLayer()
         if innenflaeche_layer is not None and not self.is_valid_polygon_layer(innenflaeche_layer):
             QMessageBox.critical(self, "Fehler", "Auswahl nicht korrekt: Es muss ein Polygon-Vektorlayer für 'Innenfläche' gewählt werden.")
-            self.mMapLayerComboBox_Innenfaelche.setCurrentIndex(-1)
+            self.mMapLayerComboBox_Innenflaeche.setCurrentIndex(-1)
             return False
 
         # Überprüfen, ob der Feldgrenze-Layer ein Polygonlayer ist
@@ -200,6 +219,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
     def on_ok_button_clicked(self):
         """Überprüft die Benutzerauswahl und fügt den Daten-Layer hinzu."""
         daten_layer = self.mMapLayerComboBox_Daten.currentLayer()
+        self.anzahl_punkte = daten_layer.featureCount()
 
         if not self.is_valid_point_layer(daten_layer):
             QMessageBox.critical(self, "Fehler", "Auswahl nicht korrekt: Es muss ein Punkt-Vektorlayer für 'Daten' gewählt werden.")
@@ -211,7 +231,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # Jetzt die anderen ComboBoxen aktivieren, wenn der daten_layer valid ist
         self.mMapLayerComboBox_Parzellen.setEnabled(True)
-        self.mMapLayerComboBox_Innenfaelche.setEnabled(True)
+        self.mMapLayerComboBox_Innenflaeche.setEnabled(True)
         self.mMapLayerComboBox_Feldgrenze.setEnabled(True)
         self.mMapLayerComboBox_AF.setEnabled(True)
 
@@ -220,7 +240,10 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # Aktualisiere die Buttons nach dem Datenladen
         self.update_button_states()
-        
+
+        # LogManager initialisieren
+        self.log = log(self.mMapLayerComboBox_Daten.currentText(), QgsProject.instance().homePath())
+        self.log.set_plugin_info(self.plugin_name, self.plugin_version)
 
     def update_button_states(self):
         """Aktualisiert den Aktivierungsstatus der Buttons basierend auf den ausgewählten Layern."""
@@ -228,7 +251,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # Buttons basierend auf Layer-Validität aktivieren/deaktivieren
         self.cutFG.setEnabled(daten_layer_valid and self.is_valid_polygon_layer(self.mMapLayerComboBox_Feldgrenze.currentLayer()))
-        self.cutFB.setEnabled(daten_layer_valid and self.is_valid_polygon_layer(self.mMapLayerComboBox_Innenfaelche.currentLayer()))
+        self.cutFB.setEnabled(daten_layer_valid and self.is_valid_polygon_layer(self.mMapLayerComboBox_Innenflaeche.currentLayer()))
         self.cutPlot.setEnabled(daten_layer_valid and self.is_valid_polygon_layer(self.mMapLayerComboBox_Parzellen.currentLayer()))
         self.cutAF.setEnabled(daten_layer_valid and self.is_valid_polygon_layer(self.mMapLayerComboBox_AF.currentLayer()))
         self.cutPoints.setEnabled(hasattr(self, 'new_layer') and self.new_layer is not None)
@@ -247,6 +270,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Entferne alle existierenden Einträge in der ComboBox
         self.columnComboBox.clear()
         self.columnComboBox2.clear()
+        self.columnComboBox_Attribute.clear()
 
         # Hole die Feldnamen (Spaltennamen) des Layers
         fields = new_layer.fields()
@@ -259,6 +283,14 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             if field.type() in (QVariant.Int, QVariant.Double, QVariant.LongLong, QVariant.UInt, QVariant.ULongLong):
                 self.columnComboBox.addItem(field.name())
                 self.columnComboBox2.addItem(field.name())
+            self.columnComboBox_Attribute.addItem(field.name())
+
+    def populate_attribut_combobox(self, new_layer):
+        self.columnComboBox_Attribute.clear()
+        fields = new_layer.fields()
+        self.columnComboBox.addItem("")
+        for field in fields:
+            self.columnComboBox_Attribute.addItem(field.name())
             
     def on_SymbButton_clicked(self):
         if not self.columnComboBox.currentText() is None:
@@ -274,7 +306,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
     
     def on_Vorgewende_abschneiden_clicked(self):
         """Lösche Punkte im Vorgewende"""
-        self.plugin_instance.lösche_punkte_auf_Vorgewende(self.new_layer, self.mMapLayerComboBox_Innenfaelche.currentLayer())
+        self.plugin_instance.lösche_punkte_auf_Vorgewende(self.new_layer, self.mMapLayerComboBox_Innenflaeche.currentLayer())
         
     def on_auf_Parzellen_zuschneiden_clicked(self):
         """Lösche Punkte außerhalb der Parzellen"""
@@ -352,7 +384,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
 
             # Füge die anderen Layer zur Liste hinzu, falls sie existieren
             feldgrenze_layer = self.mMapLayerComboBox_Feldgrenze.currentLayer()
-            innenfaelche_layer = self.mMapLayerComboBox_Innenfaelche.currentLayer()
+            innenfaelche_layer = self.mMapLayerComboBox_Innenflaeche.currentLayer()
             parzellen_layer = self.mMapLayerComboBox_Parzellen.currentLayer()
             af_layer = self.mMapLayerComboBox_AF.currentLayer()
 
@@ -431,7 +463,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         priority_order = {
             self.background_layer: 6, 
             self.mMapLayerComboBox_Feldgrenze.currentLayer(): 5,
-            self.mMapLayerComboBox_Innenfaelche.currentLayer(): 4,
+            self.mMapLayerComboBox_Innenflaeche.currentLayer(): 4,
             self.mMapLayerComboBox_Parzellen.currentLayer(): 3,
             self.mMapLayerComboBox_AF.currentLayer(): 2,
             self.new_layer: 1            
@@ -439,11 +471,6 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
 
         # Rückgabe der sortierten Layer anhand der Priorität
         return sorted(layers, key=lambda layer: priority_order.get(layer, 6))
-
-
-
-
-    
     
     ##############
     ### Filter ###
@@ -609,8 +636,6 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             self.plugin_instance.create_filterparameter_tabelle(self.new_layer)
             # Multiindex Dataframe für filterbasierte Punktauswahl erstellen
             self.plugin_instance.create_multiindex_punktauswahl(self.new_layer)
-    
-    
 
     def create_histograms(self):
         # Nicht durchführen, wenn geschlossen wird
@@ -796,6 +821,8 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 self.raw_stat.setText(f"Mittelwert: {round(np.mean(values), 2)}; Standardabweichung: {round(np.std(values), 2)}; Min: {round(np.min(values), 2)}; Max: {round(np.max(values), 2)}")
                 self.filter_stat.setText(f"Mittelwert: {round(np.mean(filtered_values), 2)}; Standardabweichung: {round(np.std(filtered_values), 2)}; Min: {round(np.min(filtered_values), 2)}; Max: {round(np.max(filtered_values), 2)}")
 
+    #self.filter_stat.setText(f"Mittelwert: {round(np.mean(filtered_values), 2)}; Standardabweichung: {round(np.std(filtered_values), 2)}; Min: {round(np.min(filtered_values), 2)}; Max: {round(np.max(filtered_values), 2)}")
+
     # Hilfsfunktion, um zu prüfen, ob ein Wert numerisch ist
     def is_numeric(self, value):
         try:
@@ -804,11 +831,29 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         except (ValueError, TypeError):
             return False
 
+    # Funktion zum Speichern des Histogramms
+    def save_histogram(self):
+        project_path = QgsProject.instance().homePath()
+        hist_folder = os.path.join(project_path, "Histogramme")
+        os.makedirs(hist_folder, exist_ok=True)
+        file_path, _ = QFileDialog.getSaveFileName(
+        self,
+        "Histogramm speichern",
+        hist_folder,
+        "PNG-Datei (*.png);;JPEG-Datei (*.jpg);;PDF-Datei (*.pdf);;Alle Dateien (*)"
+    )
+        if file_path:
+            if hasattr(self, "figure"):
+                self.figure.savefig(file_path)
+                QMessageBox.information(self, "Erfolg", f"Histogramm gespeichert unter:\n{file_path}")
+            else:
+                QMessageBox.warning(self, "Fehler", "Kein Histogramm zum Speichern vorhanden.")
 
-       
-    
     ########## Untergrenze ########## 
     def on_untergrenze_anwenden_clicked(self):
+        # ID für Statistik erstellen
+        id = str(uuid.uuid4())
+
         # Hole den Wert aus doubleSpinBox_LB
         lb_value = self.doubleSpinBox_LB.value()
 
@@ -838,10 +883,22 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # Aktualisiere die Anzeige des Canvas
         self.create_histograms()
+
+        self.log_untergrenze(id)
+        self.log_kenngroessen(id)
         
     def on_untergrenze_reset_clicked(self):
         # Hole den Spaltennamen aus columnComboBox2
         selected_column = self.columnComboBox2.currentText()
+
+        # Entfernt "actions" und "statistics" aus dem Log, entsprechend aktionstyp, typ, selected_column, methode, wert
+        aktionstyp = "Filter"
+        typ = "Untergrenze"
+        methode = self.comboBox_LB.currentText()
+        wert = str(self.doubleSpinBox_LB.value())
+        id = str(self.log.remove_action_by_parameters(aktionstyp, typ, selected_column, methode, wert))
+        if id:
+            self.log.remove_by_id(id)
         
         # Setze den Wert in der Tabelle Filterparameter: Zeile 1 (Untergrenze) und die ausgewählte Spalte auf NA
         self.plugin_instance.filterparameter_tabelle.at[0, selected_column] = None
@@ -869,11 +926,12 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # Aktualisiere die Anzeige des Canvas
         self.create_histograms()
-        
-    
     
     ########## Obergrenze ########## 
     def on_obergrenze_anwenden_clicked(self):
+        # ID für Statistik erstellen
+        id = str(uuid.uuid4())
+
         # Hole den Wert aus doubleSpinBox_UB
         ub_value = self.doubleSpinBox_UB.value()
 
@@ -906,10 +964,22 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # Aktualisiere die Anzeige des Canvas
         self.create_histograms()
+
+        self.log_obergrenze(id)
+        self.log_kenngroessen(id)
         
     def on_obergrenze_reset_clicked(self):
         # Hole den Spaltennamen aus columnComboBox2
         selected_column = self.columnComboBox2.currentText()
+
+        # Entfernt "actions" und "statistics" aus dem Log, entsprechend aktionstyp, typ, selected_column, methode, wert
+        aktionstyp = "Filter"
+        typ = "Obergrenze"
+        methode = self.comboBox_UB.currentText()
+        wert = str(self.doubleSpinBox_UB.value())
+        id = str(self.log.remove_action_by_parameters(aktionstyp, typ, selected_column, methode, wert))
+        if id:
+            self.log.remove_by_id(id)
         
         # Setze den Wert in der Tabelle Filterparameter: Zeile 3 (Obergrenze) und die ausgewählte Spalte auf NA
         self.plugin_instance.filterparameter_tabelle.at[2, selected_column] = None
@@ -937,6 +1007,8 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         
     ########## Standardabweichung ##########
     def on_sd_anwenden_clicked(self):
+        id = str(uuid.uuid4())
+
         # Hole den Wert aus doubleSpinBox_UB
         sd_value = self.doubleSpinBox_SD.value()
 
@@ -982,10 +1054,22 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         
         # Aktualisiere die Anzeige des Canvas
         self.create_histograms()
+
+        self.log_sd(id)
+        self.log_kenngroessen(id)
         
     def on_sd_reset_clicked(self):
         # Hole den Spaltennamen aus columnComboBox2
         selected_column = self.columnComboBox2.currentText()
+
+        # Entfernt "actions" und "statistics" aus dem Log, entsprechend aktionstyp, typ, selected_column, methode, wert
+        aktionstyp = "Filter"
+        typ = "Standardabweichung"
+        methode = self.comboBox_sd.currentText()
+        wert = str(self.doubleSpinBox_SD.value())
+        id = str(self.log.remove_action_by_parameters(aktionstyp, typ, selected_column, methode, wert))
+        if id:
+            self.log.remove_by_id(id)
         
         # Setze die Werte in der Tabelle Filterparameter zurück
         self.plugin_instance.filterparameter_tabelle.at[4, selected_column] = None
@@ -1013,6 +1097,146 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Aktualisiere die Anzeige des Canvas
         self.create_histograms()
 
+    ########## Log alle Änderungen im Tab "Filter" ##########
+    # Log Untergrenze
+    def log_untergrenze(self, id):
+        selected_column = self.columnComboBox2.currentText()
+        value = self.plugin_instance.filterparameter_tabelle.at[0, selected_column]
+        count = self.plugin_instance.auswahl_tabelle.at[0, selected_column]
+
+        if count != None:
+            relativ = round((count / self.anzahl_punkte) * 100, 2)
+            methode = self.comboBox_LB.currentText()
+            self.log.log_event("Filter",{
+                "ID": id,
+                "Typ:": "Untergrenze",
+                "Attribut:": f"{selected_column}",
+                "Methode:": f"{methode}",
+                "Wert:": f"{value}",
+                "Entfernte Punkte:": {"absolut:": f"{count}", "relativ": f"{relativ}%"}
+            })
+
+    # Log Obergrenze
+    def log_obergrenze(self, id):
+        selected_column = self.columnComboBox2.currentText()
+        value = self.plugin_instance.filterparameter_tabelle.at[2, selected_column]
+        count = self.plugin_instance.auswahl_tabelle.at[1, selected_column]
+
+        if count != None:
+            relativ = round((count / self.anzahl_punkte) * 100, 2)
+            methode = self.comboBox_UB.currentText()
+            self.log.log_event("Filter",{
+                "ID": id,
+                "Typ:": "Obergrenze",
+                "Attribut:": f"{selected_column}",
+                "Methode:": f"{methode}",
+                "Wert:": f"{value}",
+                "Entfernte Punkte:": {"absolut:": f"{count}", "relativ": f"{relativ}%"}
+            })
+
+    # Log Standardabweichung
+    def log_sd(self, id):
+        selected_column = self.columnComboBox2.currentText()
+        count = self.plugin_instance.auswahl_tabelle.at[2, selected_column]
+        if count != None:
+            value = self.doubleSpinBox_SD.value()
+            methode = self.comboBox_sd.currentText()
+            relativ = round((count / self.anzahl_punkte) * 100, 2)
+
+            self.log.log_event("Filter",{
+                "ID": id,
+                "Typ:": "Standardabweichung",
+                "Attribut:": f"{selected_column}",
+                "Methode:": f"{methode}",
+                "Wert:": f"{value}",
+                "Entfernte Punkte:": {"absolut:": f"{count}", "relativ:": f"{relativ}%"}
+            })
+
+    # Log Überlappung
+    def log_ueberlappung(self):
+        self.log.log_event()
+
+    # Helferfunktion zum Flatten
+    def _flatten(self, item):
+        return list(itertools.chain.from_iterable(item)) if any(isinstance(i, list) for i in item) else item
+
+    # Hilfsfunktion um Werte und gefilterte Werte herauszubekommen
+    # To-Do: Sinnvoller Einbau in create_histograms() 
+    def get_values_and_filtered_values(self):
+        column_name = self.columnComboBox2.currentText()
+        values = [float(feat[column_name]) for feat in self.new_layer.getFeatures()
+                if feat[column_name] is not None and self.is_numeric(feat[column_name])]
+
+        filtered_values = []
+
+        if self.tabWidget_Filter.currentIndex() == 0:
+            if self.checkBox_hist.isChecked():
+                alle_filter_punkte = self.plugin_instance.punktauswahl_gesamt
+                flat = list(itertools.chain.from_iterable(alle_filter_punkte)) if any(isinstance(i, list) for i in alle_filter_punkte) else alle_filter_punkte
+                punkt_ids = set(flat)
+            else:
+                unter_ids = self._flatten(self.plugin_instance.filter_punktauswahl.loc['Untergrenze', column_name])
+                ober_ids = self._flatten(self.plugin_instance.filter_punktauswahl.loc['Obergrenze', column_name])
+                punkt_ids = set(unter_ids).union(ober_ids)
+
+        elif self.tabWidget_Filter.currentIndex() == 1:
+            if self.checkBox_hist.isChecked():
+                alle_filter_punkte = self.plugin_instance.punktauswahl_gesamt
+                flat = list(itertools.chain.from_iterable(alle_filter_punkte)) if any(isinstance(i, list) for i in alle_filter_punkte) else alle_filter_punkte
+                punkt_ids = set(flat)
+            else:
+                sd_ids = self._flatten(self.plugin_instance.filter_punktauswahl.loc['Standardabweichung', column_name])
+                punkt_ids = set(sd_ids)
+
+        # Generiere gefilterte Werte
+        for feat in self.new_layer.getFeatures():
+            if feat.id() not in punkt_ids and feat[column_name] is not None and self.is_numeric(feat[column_name]):
+                filtered_values.append(float(feat[column_name]))
+
+        return values, filtered_values
+
+    # Log der wichtigsten statistischen Kenngrößen
+    def log_kenngroessen(self, id:str):
+        column_name = self.columnComboBox2.currentText()
+        values, filtered_values = self.get_values_and_filtered_values()
+        count_c = len(values)
+        count_fv = len(filtered_values)
+        if ((values != None) or (filtered_values != None)) and (count_fv != count_c):
+            mittel_raw = round(np.mean(values), 2)
+            mittel_filtered = round(np.mean(filtered_values), 2)
+            sd_raw = round(np.std(values), 2)
+            sd__filtered = round(np.std(filtered_values), 2)
+            min_raw = round(np.min(values), 2)
+            min_filtered = round(np.min(filtered_values), 2)
+            max_raw = round(np.max(values), 2)
+            max_filtered = round(np.max(filtered_values), 2)
+            self.log.log_statistic(f"Gesamtdatenmenge - {column_name}", {
+                "Mittelwert:": f"{mittel_raw}",
+                "Min:":f"{min_raw}",
+                "Max:":f"{max_raw}",
+                "Standardabweichung:":f"{sd_raw}",
+                "Anzahl Beobachtungen:":f"{count_c}",
+            }, f"Gefilterte Daten - {column_name}", {
+                "Mittelwert:": f"{mittel_filtered}",
+                "Min:": f"{min_filtered}",
+                "Max:":f"{max_filtered}",
+                "Standardabweichung:":f"{sd__filtered}",
+                "Anzahl gefilterter Beobachtungen:":f"{count_fv}"
+            }, id)
+
+    # Log wenn Attribute angefügt, bzw. erstellt werden
+    def log_attribute(self, type: str):
+        if type == "manuell":
+            attribut = self.lineEdit.text()
+            s = "Attribut manuell anfügen"
+        elif type == "uebertragen":
+            attribut = self.mComboBox_Plots.checkedItems()
+            s = "Parzellenattribut übernehmen"
+        self.log.log_event("Attribut anlegen", {
+            "Typ:":f"{s}",
+            "Attribut:":f"{attribut}"
+        })
+
     ########################## 
     ### Attribute anfügen ###
     ##########################
@@ -1035,17 +1259,38 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 self.show_polygon_layer_selector()
             else:
                 self.close()
+
+    def parzellen_layer_check(self, check:bool):
+            parzellen_layer = self.mMapLayerComboBox_Parzellen.currentLayer()
+            if parzellen_layer == None:
+                self.groupBox_fehlendeParzelle.show()
+                self.groupBox_fehlendeParzelle.setEnabled(True)
+                self.groupBox_Parzellenattribute.setEnabled(False)
+            else:                
+                #self.groupBox_fehlendeParzelle.setEnabled(False)
+                self.groupBox_Parzellenattribute.setEnabled(True)
+                self.mComboBox_Plots.clear()
+                fields = parzellen_layer.fields()
+                for field in fields:
+                    self.mComboBox_Plots.addItem(field.name())
+                self.mComboBox_Plots.setEnabled(True)
+                if check == True:
+                    self.label_Parzellen_warnung.setText(parzellen_layer.name())
+                    self.groupBox_fehlendeParzelle.setTitle("Parzellen-Layer ausgewählt:")
+                else:                    
+                    self.groupBox_fehlendeParzelle.hide()
+
                 
-        self.columnComboBox_Attribute.clear()
                         
     def on_attribut_button_clicked(self):
         # Prüfen ob Attribute ausgewählt wurden
-        selected_fields = self.mComboBox_Plots.checkedItems()  
+        selected_fields = self.mComboBox_Plots.checkedItems()
         if not selected_fields:
             QMessageBox.warning(self, "Hinweis", "Bitte wähle mindestens ein Attribut aus.")
             return
         
         self.plugin_instance.attribute_anfügen(self.new_layer)
+        self.log_attribute("uebertragen")
         
     def show_polygon_layer_selector(self):
         # Dialog erstellen
@@ -1085,12 +1330,53 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             selected_layer = combo.currentData()
             self.mMapLayerComboBox_Parzellen.setLayer(selected_layer)
             self.attribute_anfügen_check()
-                    
+            self.parzellen_layer_check(True)
+            self.log.set_layer_info(
+                parzellen_layer = selected_layer.name()
+            )
+
+    def on_point_selection_clicked(self):
+        self.showMinimized()        
+        self.plugin_instance.point_selection(self.new_layer)
+
+    # Funktion zum Anlegen eines neuen Attributes
+    # Bug: Wenn Spaltenname "Testattribut" angegeben wird -> Feld existiert nicht
+    def on_attribut_anlegen_clicked(self):
+        # Prüfen ob Attribute ausgewählt wurden
+        attribut = self.lineEdit.text()
+        if self.comboBoxDatentyp.currentText() == "String":
+            typ = QVariant.String
+        elif self.comboBoxDatentyp.currentText() == "Ganzzahl":
+            typ = QVariant.Int
+        elif self.comboBoxDatentyp.currentText() == "Dezimalzahl":
+            typ = QVariant.Double
+        self.neues_feld_anlegen(self.new_layer, attribut, typ)
+        self.log_attribute("manuell")
+
+    # Neue Spalte in der Attributtabelle anlegen
+    def neues_feld_anlegen(self, new_layer, attribut, typ):
+        # Prüfen, ob Feld schon existiert
+        if attribut in [f.name() for f in new_layer.fields()]:
+            QMessageBox.warning(self, "Bereits vorhanden!", "Das eingegebene Attribut existiert bereits. Bitte " \
+            "wählen Sie einen anderen Namen.")
+            return
+
+        field = QgsField()
+        field.setName(attribut)
+        field.setType(typ)
+
+        if not self.new_layer.isEditable():
+            self.new_layer.startEditing()
+
+        # Neues Attribut hinzufügen
+        if self.new_layer.dataProvider().addAttributes([field]):
+            self.new_layer.updateFields()
+            QMessageBox.information(self, "Erfolg", "Attribut erfolgreich angelegt.")
+            self.columnComboBox_Attribute.addItem(attribut)
+            self.columnComboBox_Attribute.setCurrentText(attribut)
         else:
-            self.close()
-    
-    
-    
+            QMessageBox.warning(self, "Fehler", "Das Attribut konnte nicht angelegt werden.")
+            return    
     
     #########################
     ### Weiter und Zurück ###
@@ -1100,7 +1386,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             self.tabWidget.setTabEnabled(1, True)
             self.tabWidget.setCurrentIndex(1)
             self.tabWidget.setTabEnabled(0, False)
-            
+
             # Auswahltabelle erstellen und füllen
             self.plugin_instance.create_auswahl_tabelle(self.new_layer)
             self.fill_table_widget(self.tableWidget_Auswahl, self.plugin_instance.auswahl_tabelle)
@@ -1114,7 +1400,16 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             self.mapCanvas.setLayers([])
             self.mapCanvas.refresh()
 
-            
+            # Layer Informationen loggen
+            self.log.set_layer_info(
+                punkt_layer = self.mMapLayerComboBox_Daten.currentText(),
+                parzellen_layer = self.mMapLayerComboBox_Parzellen.currentText() if self.mMapLayerComboBox_Parzellen.currentText() else "Nicht angegeben",
+                innenflaeche_layer = self.mMapLayerComboBox_Innenflaeche.currentText() if self.mMapLayerComboBox_Innenflaeche.currentText() else "Nicht angegeben",
+                feldgrenze_layer = self.mMapLayerComboBox_Feldgrenze.currentText() if self.mMapLayerComboBox_Feldgrenze.currentText() else "Nicht angegeben",                
+                ausschlussflaeche_layer = self.mMapLayerComboBox_AF.currentText() if self.mMapLayerComboBox_AF.currentText() else "Nicht angegeben",
+                filter_layer = self.new_layer.name()
+            )
+
         else:
             QMessageBox.critical(self, "Fehler", "Sie müssen einen Punktdatensatz auswählen")
             
@@ -1193,10 +1488,13 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 # Änderungen speichern und Bearbeitung beenden
                 self.new_layer.commitChanges() # Änderungen speichern und Bearbeitung beenden
                 self.on_SymbButton_clicked()
-                              
-        self.attribute_anfügen_check()
-        
-        
+
+        self.parzellen_layer_check(False)
+
+        # Combobox mit Datentypen füllen
+        typ = ["Ganzzahl", "Dezimalzahl", "String"]
+        self.comboBoxDatentyp.addItems(typ)
+        self.comboBoxDatentyp.setEnabled(True)
         
     def on_back_button_clicked(self):
         aw = QMessageBox.question(self, 'Bestätigung', 
@@ -1229,16 +1527,24 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             self.label_auswahl.setText("keine Filter angewand")
             self.label_auswahl_rel.setText("")
             self.reset_spinboxes()
-            self.plugin_instance.punktauswahl_gesamt = []
-                    
+            self.plugin_instance.punktauswahl_gesamt = []                    
             self.fill_map_widget_zuschneiden()
         
     ###############
     ### Abbruch ###
     ###############
-    def on_exit_button_clicked(self):
-        """closeEvent ausführen"""
+    # Button "Abbrechen" im Reiter "Daten" und "Filter"
+    def on_cancel_button_clicked(self):
+        """closeEvent ausführen"""        
         self.close()  # Schließt das Fenster und ruft das 'closeEvent' auf
+        
+    # Button "Beenden" im Reiter "Attribute einfügen"
+    def on_exit_button_clicked(self):
+        rp = QMessageBox.question(None, "Plugin Beenden?", "Möchten Sie die Bearbeitung des Datensatzes wirklich beenden?",
+                                  QMessageBox.Yes | QMessageBox.No)
+        if rp == QMessageBox.Yes:
+            self.log.write_logs()
+            self.close()
         
     def closeEvent(self, event):
         """Cleanup ausführen, wenn Fenster geschlossen wird"""        
@@ -1272,17 +1578,18 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 # Reset UI components
                 self.mMapLayerComboBox_Daten.setEnabled(True)
                 self.mMapLayerComboBox_Parzellen.setEnabled(False)
-                self.mMapLayerComboBox_Innenfaelche.setEnabled(False)
+                self.mMapLayerComboBox_Innenflaeche.setEnabled(False)
                 self.mMapLayerComboBox_Feldgrenze.setEnabled(False)
                 self.mMapLayerComboBox_AF.setEnabled(False)
                 self.columnComboBox.setEnabled(False)        
                 self.mMapLayerComboBox_Daten.setCurrentIndex(-1)
                 self.mMapLayerComboBox_Parzellen.setCurrentIndex(-1)
-                self.mMapLayerComboBox_Innenfaelche.setCurrentIndex(-1)
+                self.mMapLayerComboBox_Innenflaeche.setCurrentIndex(-1)
                 self.mMapLayerComboBox_Feldgrenze.setCurrentIndex(-1)
                 self.mMapLayerComboBox_AF.setCurrentIndex(-1)
                 self.columnComboBox.clear()
                 self.columnComboBox2.clear() # neu
+                self.columnComboBox_Attribute.clear()
                 self.cutFG.setEnabled(False)
                 self.cutFB.setEnabled(False)
                 self.cutPlot.setEnabled(False)
@@ -1307,6 +1614,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 self.pushButton.setEnabled(True)
                 self.mComboBox_Plots.clear()
                 self.mComboBox_Plots.setEnabled(False)
+                
                 # Entferne den Hintergrundlayer, falls er existiert
                 try:
                     if hasattr(self, 'background_layer') and self.background_layer.isValid():
@@ -1341,17 +1649,18 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
                 # Reset UI components
                 self.mMapLayerComboBox_Daten.setEnabled(True)
                 self.mMapLayerComboBox_Parzellen.setEnabled(False)
-                self.mMapLayerComboBox_Innenfaelche.setEnabled(False)
+                self.mMapLayerComboBox_Innenflaeche.setEnabled(False)
                 self.mMapLayerComboBox_Feldgrenze.setEnabled(False)
                 self.mMapLayerComboBox_AF.setEnabled(False)
                 self.columnComboBox.setEnabled(False)        
                 self.mMapLayerComboBox_Daten.setCurrentIndex(-1)
                 self.mMapLayerComboBox_Parzellen.setCurrentIndex(-1)
-                self.mMapLayerComboBox_Innenfaelche.setCurrentIndex(-1)
+                self.mMapLayerComboBox_Innenflaeche.setCurrentIndex(-1)
                 self.mMapLayerComboBox_Feldgrenze.setCurrentIndex(-1)
                 self.mMapLayerComboBox_AF.setCurrentIndex(-1)
                 self.columnComboBox.clear()
                 self.columnComboBox2.clear() # neu
+                self.columnComboBox_Attribute.clear()
                 self.cutFG.setEnabled(False)
                 self.cutFB.setEnabled(False)
                 self.cutPlot.setEnabled(False)
