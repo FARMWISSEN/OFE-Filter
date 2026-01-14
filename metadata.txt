@@ -3,7 +3,7 @@ name=OFR Filter
 qgisMinimumVersion=3.0
 description=Filtering Point Data for On-Farm Experiments
 version=0.1
-author=Sebastian Ramm
+author=Sebastian Ramm; Till Grabo
 email=sebastian.ramm@haw-kiel.de
 
 about=Filtering Point Data for On-Farm Experiments
