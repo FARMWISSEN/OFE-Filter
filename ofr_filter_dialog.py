@@ -154,6 +154,10 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Connect overlap filter buttons
         self.overlap_button.clicked.connect(self.on_overlap_anwenden_clicked)
         self.overlap_reset_button.clicked.connect(self.on_overlap_reset_clicked)
+        
+        # Für Testversion
+        self.tabWidget_Filter.setTabEnabled(2, False)
+        self.tabWidget_FilterViewer.setTabEnabled(2, False)
 
     ################################
     ### Daten laden, prüfen usw. ###
