@@ -1,93 +1,194 @@
-# filtering
+# OFE Filter – QGIS Plugin für On-Farm-Experimente
 
+Das OFE Filter Plugin ist das zweite Plugin im OFE-Werkzeugkasten der OG SNaPwürZ. Es unterstützt dich in QGIS beim Bereinigen und Filtern von Punktdatensätzen, wie sie in On-Farm-Experimenten anfallen (z. B. Ertragsdaten). Dazu gehören räumliche Zuschnitte über Polygonflächen (z.B. Feldgrenze oder Parzellen), Ausreißerfilter (Unter-/Obergrenze, Standardabweichung), das manuelle Entfernen von Punkten sowie die Übertragung von Parzellenattributen (z.B. Versuchsvariante, Block).
 
+> Hinweis: Das Plugin arbeitet projektbasiert. Das QGIS-Projekt muss gespeichert sein, damit Output-Ordner und Logs angelegt werden können.
 
-## Getting started
+---
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## 📋 Inhaltsverzeichnis
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+- [Überblick](#überblick)
+- [Features](#features)
+- [Filtermethoden](#filtermethoden)
+- [Installation](#installation)
+- [Schnellstart](#schnellstart)
+- [Voraussetzungen](#voraussetzungen)
+- [Verzeichnisstruktur](#verzeichnisstruktur)
+- [Output-Struktur](#output-struktur)
+- [Logging](#logging)
+- [Support & Kontakt](#support--kontakt)
+- [Lizenz](#lizenz)
 
-## Add your files
+---
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+## 🎯 Überblick
 
+Mit dem OFE Filter erstellst du aus einem bestehenden Punkt-Layer eine gefilterte Kopie (Shapefile) und kannst diese anschließend:
+
+- räumlich zuschneiden (Feldgrenze / Innenfläche / Parzellen),
+- Punkte in Ausschlussflächen entfernen,
+- Ausreißer anhand von Attributwerten selektieren,
+- Punkte manuell selektieren und löschen,
+- Parzellenattribute in den Punktdatensatz übernehmen,
+- und bei Bedarf Attribute/Spalten manuell anlegen und Werte für ausgewählte Punkte setzen.
+
+Die Ergebnisse werden im Projekt abgelegt und in QGIS in einer eigenen Layergruppe organisiert.
+
+---
+
+## ✨ Features
+
+### Daten & Ausgabe
+- ✅ Erstellt automatisch einen neuen Layer **`Filter_<Originalname>`**
+- ✅ Speichert Ausgabe im Projektordner (Ordner **`OFR_Filter/`**)
+- ✅ Fügt den neuen Layer in die Gruppe **„Gefilterte Daten“** ein
+- ✅ Graduierte Symbolisierung für numerische Attribute (8 Klassen)
+
+### Datenzuschnitt (räumlich)
+- **Auf Feldgrenze zuschneiden**: entfernt Punkte außerhalb der Feldgrenze
+- **Vorgewende abschneiden**: behält nur Punkte innerhalb einer „Innenfläche“
+- **Auf Parzellen zuschneiden**: entfernt Punkte außerhalb der Parzellenflächen
+- **Ausschlussfläche**: entfernt Punkte innerhalb einer Ausschlussfläche (z. B. Fahrspuren, Störungen)
+- **Punkte manuell löschen**: interaktive Auswahl im Kartenfenster
+
+### Attributfilter (numerisch)
+- Untergrenze (mit Vergleich „<“ oder „≤“)
+- Obergrenze (mit Vergleich „>“ oder „≥“)
+- Standardabweichung: Mittelwert ± (Multiplikator × SD), wahlweise nur Unter- oder Obergrenze  
+  Optional kann die SD auf Basis bereits gefilterter Daten berechnet werden.
+
+### Attribute anfügen & manuell setzen
+- **Parzellenattribute anfügen**: räumlicher Join (Polygon → Punkt) für ausgewählte Felder
+- **Attribute manuell einfügen**: neue Spalten anlegen (String/Ganzzahl/Dezimalzahl)
+- **Werte manuell setzen**: Punkte auswählen und Wert für ein Attribut überschreiben
+
+### Visualisierung
+- Histogramm-/Verteilungsplot (inkl. gefilterter Werte und Grenzlinien)
+- Histogramm-Export als PNG/JPG/PDF
+
+---
+
+## 🧪 Filtermethoden
+
+| Filter | Beschreibung | Typ |
+|-------|--------------|-----|
+| **Untergrenze** | Selektiert Werte unterhalb einer Schwelle (`<` oder `≤`) | numerisch |
+| **Obergrenze** | Selektiert Werte oberhalb einer Schwelle (`>` oder `≥`) | numerisch |
+| **Standardabweichung** | Selektiert Ausreißer über Mittelwert ± (Multiplikator × SD); Methode: beidseitig / nur unten / nur oben | numerisch |
+
+> Die selektierten Punkte werden im Layer markiert (Selektion). Je nach Workflow können sie anschließend gelöscht oder weiterbearbeitet werden.
+
+---
+
+## 🧩 Installation
+
+### Plugin installieren (manuell)
+1. Kopiere dieses Repository nach: :  
+   `QGIS3/profiles/default/python/plugins/ofr_filter`  
+2. Starte QGIS neu
+3. Aktiviere das Plugin unter: *Erweiterungen → Erweiterungen verwalten*
+
+### Python-Abhängigkeiten
+Das Plugin benötigt zusätzliche Python-Module: pandas und matplotlib (siehe `metadata.txt`).
+
+**Windows (OSGeo4W Shell):**
+```bash
+python -m pip install pandas matplotlib
 ```
-cd existing_repo
-git remote add origin https://gitlab.agdoit.eu/eip-snapwuerz/filtering.git
-git branch -M main
-git push -uf origin main
+
+**Mac (QGIS App Bundle):**
+```bash
+/Applications/QGIS-LTR.app/Contents/MacOS/bin/pip3 install pandas matplotlib
 ```
 
-## Integrate with your tools
+> In vielen QGIS-Installationen sind `numpy`/`matplotlib` bereits vorhanden – `pandas` ist jedoch nicht immer vorinstalliert.
 
-- [ ] [Set up project integrations](https://gitlab.agdoit.eu/eip-snapwuerz/filtering/-/settings/integrations)
+---
 
-## Collaborate with your team
+## 🚀 Schnellstart
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+1. **Projekt speichern** (wichtig, sonst kann kein Output erzeugt werden).
+2. Plugin öffnen: **Praxisversuche → OFR Filter**
+3. Unter **Daten**:
+   - Punktdaten-Layer auswählen
+   - optional: Parzellen, Feldgrenze, Innenfläche, Ausschlussfläche auswählen
+   - **Hinzufügen** klicken → es wird `Filter_<Layer>` erstellt
+4. Unter **Datenzuschnitt**:
+   - gewünschte Zuschnitte ausführen (Feldgrenze / Innenfläche / Parzellen / Ausschlussfläche)
+5. Unter **Filter**:
+   - Attribut auswählen
+   - Unter-/Obergrenze und/oder SD-Filter anwenden
+   - Histogramm prüfen und bei Bedarf speichern
+6. Optional:
+   - Punkte manuell löschen
+   - Parzellenattribute anfügen
+   - Attribute manuell anlegen und Werte für ausgewählte Punkte setzen
 
-## Test and Deploy
+---
 
-Use the built-in continuous integration in GitLab.
+## 🧰 Voraussetzungen
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+- QGIS >= 3.x
+- Python-Module: pandas, matplotlib (zusätzlich zu QGIS-Standardbibliotheken)
 
-***
+---
 
-# Editing this README
+## 🗂️ Verzeichnisstruktur
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+```text
+OFR-Filter/
+├── metadata.txt                 # Plugin-Metadaten (Name, Version, Abhängigkeiten)
+├── ofr_filter.py                # Hauptlogik (Layerkopie, Zuschnitt, Filter, Selektion)
+├── ofr_filter_dialog.py         # UI-Controller (Workflow, Plot, Button-Logik)
+├── ofr_filter_dialog_base.ui    # Qt Designer UI
+├── ofr_LogManager.py            # Logging (JSON + CSV)
+├── resources.qrc / resources.py # Icons/Resources
+├── i18n/                        # Übersetzungen
+└── help/                        # Sphinx-Doku (Template)
+```
 
-## Suggestions for a good README
+---
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+## 📦 Output-Struktur
 
-## Name
-Choose a self-explaining name for your project.
+Im (Projekt-)Ordner werden u. a. folgende Verzeichnisse verwendet:
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+```text
+<Projektordner>/
+├── OFR_Filter/                  # erzeugte Filter-Shapefiles (Filter_<Layer>.shp + Nebenfiles)
+├── Logs/                        # Filter-Logs (JSON + CSV)
+└── Histogramme/                 # gespeicherte Histogramme (PNG/JPG/PDF)
+```
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+---
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+## 🧾 Logging
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+Alle wichtigen Aktionen (Zuschnitt, Filterparameter, Attributübernahmen etc.) werden in **`Logs/`** protokolliert:
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+- **JSON**: strukturierter Log (für Auswertung/Archivierung)
+- **CSV**: einfache, tabellarische Nachvollziehbarkeit
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+Die Logdateien enthalten einen Zeitstempel im Dateinamen.
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+---
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+## 🆘 Support & Kontakt
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+- Fehler bitte als Issue melden: 
+- Repository: https://github.com/FARMWISSEN/????
+- Projekthomepage: https://snapwürz.de/
+![](https://xn--snapwrz-r2a.de/wp-content/uploads/2024/06/Logo_Transparent-1-1024x635.png)
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
 
-## License
-For open source projects, say how it is licensed.
+---
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+## 📄 Lizenz
+
+Dieses Projekt ist freie Software: Du kannst es unter den Bedingungen der **GNU General Public License** weiterverbreiten und/oder modifizieren, wie von der Free Software Foundation veröffentlicht; entweder **Version 2 der Lizenz** oder (nach deiner Wahl) **jeder späteren Version**.
+
+Der vollständige Lizenztext liegt in der Datei **LICENSE.txt**.
+
+**SPDX-License-Identifier:** `GPL-2.0-or-later`
