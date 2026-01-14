@@ -768,7 +768,7 @@
           </rect>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="tab">
           <attribute name="title">
@@ -1101,17 +1101,181 @@
           <attribute name="title">
            <string>Überlappung</string>
           </attribute>
-          <widget class="QPushButton" name="pushButton_start_overlap">
+          <widget class="QLabel" name="overlap_description">
            <property name="geometry">
             <rect>
              <x>10</x>
-             <y>10</y>
-             <width>75</width>
+             <y>0</y>
+             <width>811</width>
+             <height>31</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Der Überlappungsfilter identifiziert Punkte, die durch mehrfaches Überfahren einer Fläche entstanden sind. Dazu werden Zeitstempel der Punkte analysiert und Pfade rekonstruiert.</string>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+          <widget class="QComboBox" name="timestamp_combo">
+           <property name="geometry">
+            <rect>
+             <x>140</x>
+             <y>30</y>
+             <width>171</width>
+             <height>30</height>
+            </rect>
+           </property>
+          </widget>
+          <widget class="QLabel" name="timestamp_label">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>30</y>
+             <width>121</width>
              <height>30</height>
             </rect>
            </property>
            <property name="text">
-            <string>Start</string>
+            <string>Zeitstempel-Spalte:</string>
+           </property>
+          </widget>
+          <widget class="QDoubleSpinBox" name="width_spin">
+           <property name="geometry">
+            <rect>
+             <x>460</x>
+             <y>30</y>
+             <width>70</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="minimum">
+            <double>0.100000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>100.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>10.000000000000000</double>
+           </property>
+          </widget>
+          <widget class="QLabel" name="width_label">
+           <property name="geometry">
+            <rect>
+             <x>330</x>
+             <y>30</y>
+             <width>121</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Arbeitsbreite (m):</string>
+           </property>
+          </widget>
+          <widget class="QCheckBox" name="zero_filter_check">
+           <property name="geometry">
+            <rect>
+             <x>550</x>
+             <y>30</y>
+             <width>341</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Zusätzlich Null-Werte im ausgewählten Attribut filtern</string>
+           </property>
+          </widget>
+          <widget class="QDoubleSpinBox" name="timedelta_spin">
+           <property name="geometry">
+            <rect>
+             <x>140</x>
+             <y>70</y>
+             <width>70</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="minimum">
+            <double>0.100000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>1000.000000000000000</double>
+           </property>
+           <property name="value">
+            <double>5.000000000000000</double>
+           </property>
+          </widget>
+          <widget class="QLabel" name="timedelta_label">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>70</y>
+             <width>121</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Max. Zeitdifferenz (s):</string>
+           </property>
+          </widget>
+          <widget class="QDoubleSpinBox" name="tolerance_spin">
+           <property name="geometry">
+            <rect>
+             <x>350</x>
+             <y>70</y>
+             <width>70</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="minimum">
+            <double>0.010000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>10.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.010000000000000</double>
+           </property>
+           <property name="value">
+            <double>0.100000000000000</double>
+           </property>
+          </widget>
+          <widget class="QLabel" name="tolerance_label">
+           <property name="geometry">
+            <rect>
+             <x>220</x>
+             <y>70</y>
+             <width>121</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Toleranz (m):</string>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="overlap_button">
+           <property name="geometry">
+            <rect>
+             <x>450</x>
+             <y>70</y>
+             <width>80</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Anwenden</string>
+           </property>
+          </widget>
+          <widget class="QPushButton" name="overlap_reset_button">
+           <property name="geometry">
+            <rect>
+             <x>690</x>
+             <y>70</y>
+             <width>101</width>
+             <height>30</height>
+            </rect>
+           </property>
+           <property name="text">
+            <string>Zurücksetzen</string>
            </property>
           </widget>
          </widget>
