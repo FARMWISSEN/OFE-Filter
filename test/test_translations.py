@@ -38,8 +38,10 @@ class SafeTranslationsTest(unittest.TestCase):
         """Test that translations work."""
         parent_path = os.path.join(__file__, os.path.pardir, os.path.pardir)
         dir_path = os.path.abspath(parent_path)
+        # Translation files follow the plugin naming convention:
+        # i18n/OFEFilter_<locale>.qm
         file_path = os.path.join(
-            dir_path, 'i18n', 'af.qm')
+            dir_path, 'i18n', 'OFEFilter_af.qm')
         translator = QTranslator()
         translator.load(file_path)
         QCoreApplication.installTranslator(translator)
