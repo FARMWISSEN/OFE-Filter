@@ -1,5 +1,5 @@
 #/***************************************************************************
-# OFRFilter
+# OFEFilter
 #
 # Filtering Point Data for On-Farm Experiments
 #							 -------------------
@@ -38,15 +38,15 @@ LOCALES =
 # translation
 SOURCES = \
 	__init__.py \
-	ofr_filter.py ofr_filter_dialog.py
+	ofe_filter.py ofe_filter_dialog.py
 
-PLUGINNAME = ofr_filter
+PLUGINNAME = ofe_filter
 
 PY_FILES = \
 	__init__.py \
-	ofr_filter.py ofr_filter_dialog.py
+	ofe_filter.py ofe_filter_dialog.py
 
-UI_FILES = ofr_filter_dialog_base.ui
+UI_FILES = ofe_filter_dialog_base.ui
 
 EXTRAS = metadata.txt icon.png
 
