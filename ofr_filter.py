@@ -55,8 +55,15 @@ class OFRFilter:
         """
 
         # Information for Logging
-        self.plugin_name = "OFR_Filter"
+        # (Display-/Logname: soll konsistent mit der Plugin-Bezeichnung sein)
+        self.plugin_name = "OFE-Filter"
         self.plugin_version = "0.0.2"
+
+        # Dateisystem-Ordnernamen für Plugin-Artefakte im Projektverzeichnis
+        # Hinweis: Für Ordnernamen ist ein Unterstrich robuster als ein Bindestrich.
+        # Wenn du lieber "OFE-Filter" als Ordnernamen willst, ändere nur diese Konstante.
+        self.output_dir_name = "OFE_Filter"
+        self.logs_subdir_name = "Logs"
 
         # Save reference to the QGIS interface
         self.iface = iface
@@ -207,8 +214,8 @@ class OFRFilter:
         # Ermitteln des Projektverzeichnisses
         project_dir = os.path.dirname(project_path)
 
-        # Pfad zum neuen Ordner "OFR_Filter"
-        self.ofr_filter_dir = os.path.join(project_dir, "OFR_Filter")
+        # Pfad zum neuen Ordner (Plugin-Output) im Projektverzeichnis
+        self.ofr_filter_dir = os.path.join(project_dir, self.output_dir_name)
 
         # Überprüfen, ob der Ordner bereits existiert, und falls nicht, erstellen
         if not os.path.exists(self.ofr_filter_dir):

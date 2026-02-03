@@ -54,7 +54,7 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         super(OFRFilterDialog, self).__init__(parent)
 
         # Informationen für Logging
-        self.plugin_name = "OFR_Filter"
+        self.plugin_name = "OFE-Filter"
         self.plugin_version = "0.0.4"
         self.anzahl_punkte = None
 
@@ -251,7 +251,8 @@ class OFRFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         self.update_button_states()
 
         # LogManager initialisieren
-        self.log = log(self.mMapLayerComboBox_Daten.currentText(), QgsProject.instance().homePath())
+        # Logs im gleichen Projekt-Unterordner wie die übrigen Plugin-Artefakte ablegen
+        self.log = log(self.mMapLayerComboBox_Daten.currentText(), self.ofr_filter_dir)
         self.log.set_plugin_info(self.plugin_name, self.plugin_version)
         
         # Populate the timestamp combo box for the overlap filter
