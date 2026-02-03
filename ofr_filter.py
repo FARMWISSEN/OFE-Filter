@@ -180,7 +180,8 @@ class OFRFilter:
         icon_path = f'{self.plugin_dir}/icon.png'
         self.add_action(
             icon_path,
-            text=self.tr(u'OFR Filter für Punktdaten'),
+            text=self.tr(u'OFE-Filter'),
+            status_tip=self.tr(u'OFE-Filter für Punktdaten (On-Farm-Experimente)'),
             callback=self.run,
             parent=self.iface.mainWindow())
 
@@ -191,7 +192,7 @@ class OFRFilter:
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
             self.iface.removePluginMenu(
-                self.tr(u'&OFR Filter'),
+                self.menu,
                 action)
             self.iface.removeToolBarIcon(action)
 
