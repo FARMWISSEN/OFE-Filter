@@ -41,7 +41,7 @@ Die Ergebnisse werden im Projekt abgelegt und in QGIS in einer eigenen Layergrup
 
 ### Daten & Ausgabe
 - ✅ Erstellt automatisch einen neuen Layer **`Filter_<Originalname>`**
-- ✅ Speichert Ausgabe im Projektordner (Ordner **`OFR_Filter/`**)
+- ✅ Speichert Ausgabe im Projektordner (Ordner **`OFE_Filter/`**)
 - ✅ Fügt den neuen Layer in die Gruppe **„Gefilterte Daten“** ein
 - ✅ Graduierte Symbolisierung für numerische Attribute (8 Klassen)
 
@@ -85,7 +85,7 @@ Die Ergebnisse werden im Projekt abgelegt und in QGIS in einer eigenen Layergrup
 
 ### Plugin installieren (manuell)
 1. Kopiere dieses Repository nach: :  
-   `QGIS3/profiles/default/python/plugins/ofr_filter`  
+   `QGIS3/profiles/default/python/plugins/ofe_filter`  
 2. Starte QGIS neu
 3. Aktiviere das Plugin unter: *Erweiterungen → Erweiterungen verwalten*
 
@@ -109,7 +109,7 @@ python -m pip install pandas matplotlib
 ## 🚀 Schnellstart
 
 1. **Projekt speichern** (wichtig, sonst kann kein Output erzeugt werden).
-2. Plugin öffnen: **Praxisversuche → OFR Filter**
+2. Plugin öffnen: **Praxisversuche → OFE-Filter**
 3. Unter **Daten**:
    - Punktdaten-Layer auswählen
    - optional: Parzellen, Feldgrenze, Innenfläche, Ausschlussfläche auswählen
@@ -137,12 +137,12 @@ python -m pip install pandas matplotlib
 ## 🗂️ Verzeichnisstruktur
 
 ```text
-OFR-Filter/
+OFE-Filter/
 ├── metadata.txt                 # Plugin-Metadaten (Name, Version, Abhängigkeiten)
-├── ofr_filter.py                # Hauptlogik (Layerkopie, Zuschnitt, Filter, Selektion)
-├── ofr_filter_dialog.py         # UI-Controller (Workflow, Plot, Button-Logik)
-├── ofr_filter_dialog_base.ui    # Qt Designer UI
-├── ofr_LogManager.py            # Logging (JSON + CSV)
+├── ofe_filter.py                # Hauptlogik (Layerkopie, Zuschnitt, Filter, Selektion)
+├── ofe_filter_dialog.py         # UI-Controller (Workflow, Plot, Button-Logik)
+├── ofe_filter_dialog_base.ui    # Qt Designer UI
+├── ofe_LogManager.py            # Logging (JSON + CSV)
 ├── resources.qrc / resources.py # Icons/Resources
 ├── i18n/                        # Übersetzungen
 └── help/                        # Sphinx-Doku (Template)
@@ -156,7 +156,7 @@ Im (Projekt-)Ordner werden u. a. folgende Verzeichnisse verwendet:
 
 ```text
 <Projektordner>/
-├── OFR_Filter/                  # erzeugte Filter-Shapefiles (Filter_<Layer>.shp + Nebenfiles)
+├── OFE_Filter/                  # erzeugte Filter-Shapefiles (Filter_<Layer>.shp + Nebenfiles)
 ├── Logs/                        # Filter-Logs (JSON + CSV)
 └── Histogramme/                 # gespeicherte Histogramme (PNG/JPG/PDF)
 ```
