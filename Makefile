@@ -26,7 +26,7 @@
 #Add iso code for any locales you want to support here (space separated)
 # default is no locales
 # LOCALES = af
-LOCALES =
+LOCALES = af de
 
 # If locales are enabled, set the name of the lrelease binary on your system. If
 # you have trouble compiling the translations, you may have to specify the full path to
@@ -38,17 +38,25 @@ LOCALES =
 # translation
 SOURCES = \
 	__init__.py \
-	ofe_filter.py ofe_filter_dialog.py
+	ofe_filter.py \
+	ofe_filter_dialog.py \
+	ofe_LogManager.py \
+	ofe_ueberlappung.py
+
 
 PLUGINNAME = ofe_filter
 
 PY_FILES = \
 	__init__.py \
-	ofe_filter.py ofe_filter_dialog.py
+	ofe_filter.py \
+	ofe_filter_dialog.py \
+	ofe_LogManager.py \
+	ofe_ueberlappung.py
+
 
 UI_FILES = ofe_filter_dialog_base.ui
 
-EXTRAS = metadata.txt icon.png
+EXTRAS = metadata.txt icon.png LICENSE.txt README.md
 
 EXTRA_DIRS =
 
