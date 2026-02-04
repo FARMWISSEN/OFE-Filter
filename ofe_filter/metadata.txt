@@ -23,7 +23,7 @@ tags=OFR
 
 homepage=https://xn--snapwrz-r2a.de/
 category=Vector
-icon=icon.png
+icon=https://raw.githubusercontent.com/FARMWISSEN/OFE-Filter/v0.1.1/ofe_filter/icon.png
 # experimental flag
 experimental=True
 
