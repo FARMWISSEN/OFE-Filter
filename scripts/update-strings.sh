@@ -1,5 +1,34 @@
 #!/bin/bash
+# Update Qt translation source files (.ts) for this plugin.
+#
+# Usage:
+#   scripts/update-strings.sh de en
+#
+# Notes:
+# - Targets QGIS 3 / PyQt5 tooling.
+# - Translation files are written as i18n/OFEFilter_<locale>.ts
+
+set -e
+
 LOCALES=$*
+
+# Base name for translation files. Must match the prefix used in ofe_filter.py.
+PLUGIN_TS_BASENAME="OFEFilter"
+
+# Try to locate a suitable pylupdate tool.
+PYLUPDATE_BIN=""
+for CANDIDATE in pylupdate5 pylupdate-qt5; do
+  if command -v "$CANDIDATE" >/dev/null 2>&1; then
+    PYLUPDATE_BIN="$CANDIDATE"
+    break
+  fi
+done
+
+if [ -z "$PYLUPDATE_BIN" ]; then
+  echo "ERROR: Could not find pylupdate5 (or pylupdate-qt5) in PATH." >&2
+  echo "Install Qt5 tools (often packaged as qttools5-dev-tools / pyqt5-dev-tools) or run this inside your QGIS/PyQt environment." >&2
+  exit 1
+fi
 
 # Get newest .py files so we don't update strings unnecessarily
 
@@ -19,7 +48,7 @@ done
 UPDATE=false
 for LOCALE in ${LOCALES}
 do
-  TRANSLATION_FILE="i18n/$LOCALE.ts"
+  TRANSLATION_FILE="i18n/${PLUGIN_TS_BASENAME}_${LOCALE}.ts"
   if [ ! -f ${TRANSLATION_FILE} ]
   then
     # Force translation string collection as we have a new language file
@@ -45,10 +74,10 @@ then
   echo "Please provide translations by editing the translation files below:"
   for LOCALE in ${LOCALES}
   do
-    echo "i18n/"${LOCALE}".ts"
+    echo "i18n/${PLUGIN_TS_BASENAME}_${LOCALE}.ts"
     # Note we don't use pylupdate with qt .pro file approach as it is flakey
     # about what is made available.
-    pylupdate4 -noobsolete ${PYTHON_FILES} -ts i18n/${LOCALE}.ts
+    "$PYLUPDATE_BIN" -noobsolete ${PYTHON_FILES} -ts i18n/${PLUGIN_TS_BASENAME}_${LOCALE}.ts
   done
 else
   echo "No need to edit any translation files (.ts) because no python files"

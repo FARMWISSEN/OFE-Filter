@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>OFR Filter</string>
+   <string>OFE-Filter</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <property name="leftMargin">
