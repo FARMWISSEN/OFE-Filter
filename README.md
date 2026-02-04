@@ -87,16 +87,15 @@ Die Ergebnisse werden im Projekt abgelegt und in QGIS in einer eigenen Layergrup
 1. QGIS öffnen
 2. **Erweiterungen → Erweiterungen verwalten und installieren…**
 3. Reiter **Einstellungen**
-4. Unter **Erweiterungsrepositorien** auf **Hinzufügen…** klicken
-5. Name vergeben (z. B. `FARMWISSEN OFE-Filter`) und folgende URL eintragen:
+4. Sicherstellen, dass **Auch experimentelle Erweiterungen anzeigen** aktiviert ist
+5. Unter **Erweiterungsrepositorien** auf **Hinzufügen…** klicken
+5. Name vergeben (z. B. `SNaPwürZ OFE-Filter`) und folgende URL eintragen:
 
    `https://github.com/FARMWISSEN/OFE-Filter/releases/latest/download/plugins.xml`
 
 6. Mit **OK** bestätigen und **Repos aktualisieren** / **Neu laden**
 7. Reiter **Alle** (oder Suche) → **OFE-Filter** auswählen → **Installieren**
 
-> Hinweis: Falls das Plugin als *experimental* markiert ist, muss in den Plugin-Einstellungen
-> „**auch experimentelle Erweiterungen anzeigen**“ aktiviert werden.
 
 ### Option B: Manuelle Installation aus dem Quellcode (für Entwicklung)
 Diese Variante ist für Entwickler gedacht.
