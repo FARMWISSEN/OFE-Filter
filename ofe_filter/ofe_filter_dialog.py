@@ -147,8 +147,8 @@ class OFEFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         # Close-Status
         self.is_closing = False
         
-        # Enable the overlap filter tab
-        self.tabWidget_Filter.setTabEnabled(2, True)
+        # Enable the overlap filter tab, für Testversion aber nicht
+        self.tabWidget_Filter.setTabEnabled(2, False)
         self.tabWidget_FilterViewer.setTabEnabled(2, False)  # Histogramm-Tab für Überlappungsfilter initial deaktivieren
         
         # Connect overlap filter buttons
@@ -156,7 +156,7 @@ class OFEFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         self.overlap_reset_button.clicked.connect(self.on_overlap_reset_clicked)
         
         # Für Testversion
-        self.tabWidget_Filter.setTabEnabled(2, False)
+      
         self.tabWidget_FilterViewer.setTabEnabled(2, False)
 
     ################################
@@ -1043,8 +1043,8 @@ class OFEFilterDialog(QtWidgets.QDialog, FORM_CLASS):
             })
             
             # Aktiviere den Histogramm-Tab und Karten-Tab
-            self.tabWidget_FilterViewer.setTabEnabled(2, True)
-            self.tabWidget_FilterViewer.setCurrentIndex(2)
+            #self.tabWidget_FilterViewer.setTabEnabled(2, True)
+            #self.tabWidget_FilterViewer.setCurrentIndex(2)
             
             # Update histograms and map
             self.create_histograms()
@@ -1166,7 +1166,7 @@ class OFEFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         self.plugin_instance.combine_filter_punktauswahl(self.new_layer)
         
         # Aktiviere den Histogramm-Tab und Karten-Tab
-        self.tabWidget_FilterViewer.setTabEnabled(2, True)
+        #self.tabWidget_FilterViewer.setTabEnabled(2, True)
         
         # Aktualisiere die Anzeige des Canvas und der zweiten Karte
         self.create_histograms()
@@ -1255,7 +1255,7 @@ class OFEFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         self.plugin_instance.combine_filter_punktauswahl(self.new_layer)
         
         # Aktiviere den Histogramm-Tab und Karten-Tab
-        self.tabWidget_FilterViewer.setTabEnabled(2, True)
+        #self.tabWidget_FilterViewer.setTabEnabled(2, True)
         
         # Aktualisiere die Anzeige des Canvas und der zweiten Karte
         self.create_histograms()
@@ -1353,7 +1353,7 @@ class OFEFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         self.plugin_instance.combine_filter_punktauswahl(self.new_layer)
         
         # Aktiviere den Histogramm-Tab und Karten-Tab
-        self.tabWidget_FilterViewer.setTabEnabled(2, True)
+        #self.tabWidget_FilterViewer.setTabEnabled(2, True)
         
         # Aktualisiere die Anzeige des Canvas und der zweiten Karte
         self.create_histograms()
