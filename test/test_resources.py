@@ -18,7 +18,7 @@ from qgis.PyQt.QtGui import QIcon
 
 
 
-class OFEFilterDialogTest(unittest.TestCase):
+class OFRFilterDialogTest(unittest.TestCase):
     """Test rerources work."""
 
     def setUp(self):
@@ -31,12 +31,12 @@ class OFEFilterDialogTest(unittest.TestCase):
 
     def test_icon_png(self):
         """Test we can click OK."""
-        path = ':/plugins/ofe_filter/icon.png'
+        path = ':/plugins/OFRFilter/icon.png'
         icon = QIcon(path)
         self.assertFalse(icon.isNull())
 
 if __name__ == "__main__":
-    suite = unittest.makeSuite(OFEFilterResourcesTest)
+    suite = unittest.makeSuite(OFRFilterResourcesTest)
     runner = unittest.TextTestRunner(verbosity=2)
     runner.run(suite)
 

@@ -1,14 +1,14 @@
 [general]
-name=OFE-Filter
+name=OFR Filter
 qgisMinimumVersion=3.0
 description=Filtering Point Data for On-Farm Experiments
-version=0.1.2
+version=0.1
 author=Sebastian Ramm; Till Grabo
 email=sebastian.ramm@haw-kiel.de
 
 about=Filtering Point Data for On-Farm Experiments
 
-tracker=https://github.com/FARMWISSEN/OFE-Filter/issues
+tracker=https://github.com/FARMWISSEN/OFE-Filter
 repository=https://github.com/FARMWISSEN/OFE-Filter
 # End of mandatory metadata
 
@@ -21,9 +21,9 @@ hasProcessingProvider=no
 # Tags are comma separated with spaces allowed
 tags=OFR
 
-homepage=https://xn--snapwrz-r2a.de/
-category=Vector
-icon=https://raw.githubusercontent.com/FARMWISSEN/OFE-Filter/v0.1.1/ofe_filter/icon.png
+homepage=https://snapwürz.de/
+category=Plugins
+icon=icon.png
 # experimental flag
 experimental=True
 
@@ -35,8 +35,8 @@ deprecated=False
 # Check the documentation for more information.
 # plugin_dependencies=
 
-#Category of the plugin: Raster, Vector, Database or Web
-
+Category of the plugin: Raster, Vector, Database or Web
+# category=
 
 # If the plugin can run on QGIS Server.
 server=False
