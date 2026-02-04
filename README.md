@@ -83,11 +83,31 @@ Die Ergebnisse werden im Projekt abgelegt und in QGIS in einer eigenen Layergrup
 
 ## 🧩 Installation
 
-### Plugin installieren (manuell)
-1. Kopiere dieses Repository nach: :  
-   `QGIS3/profiles/default/python/plugins/ofe_filter`  
-2. Starte QGIS neu
-3. Aktiviere das Plugin unter: *Erweiterungen → Erweiterungen verwalten*
+### Option A (empfohlen): Installation über QGIS-Plugin-Repository (Auto-Updates)
+1. QGIS öffnen
+2. **Erweiterungen → Erweiterungen verwalten und installieren…**
+3. Reiter **Einstellungen**
+4. Unter **Erweiterungsrepositorien** auf **Hinzufügen…** klicken
+5. Name vergeben (z. B. `FARMWISSEN OFE-Filter`) und folgende URL eintragen:
+
+   `https://github.com/FARMWISSEN/OFE-Filter/releases/latest/download/plugins.xml`
+
+6. Mit **OK** bestätigen und **Repos aktualisieren** / **Neu laden**
+7. Reiter **Alle** (oder Suche) → **OFE-Filter** auswählen → **Installieren**
+
+> Hinweis: Falls das Plugin als *experimental* markiert ist, muss in den Plugin-Einstellungen
+> „**auch experimentelle Erweiterungen anzeigen**“ aktiviert werden.
+
+### Option B: Manuelle Installation aus dem Quellcode (für Entwicklung)
+Diese Variante ist für Entwickler gedacht.
+
+1. Repository klonen oder herunterladen
+2. Sicherstellen, dass der Plugin-Ordner **`ofe_filter/`** direkt im QGIS-Plugin-Verzeichnis liegt:
+
+   Windows (Standardprofil):
+   `%APPDATA%\QGIS\QGIS3\profiles\default\python\plugins\ofe_filter`
+
+3. QGIS neu starten und Plugin im Plugin-Manager aktivieren
 
 ### Python-Abhängigkeiten
 Das Plugin benötigt zusätzliche Python-Module: pandas und matplotlib (siehe `metadata.txt`).
