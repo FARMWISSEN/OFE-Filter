@@ -8,7 +8,7 @@ email=sebastian.ramm@haw-kiel.de
 
 about=Filtering Point Data for On-Farm Experiments
 
-tracker=https://github.com/FARMWISSEN/OFE-Filter
+tracker=https://github.com/FARMWISSEN/OFE-Filter/issues
 repository=https://github.com/FARMWISSEN/OFE-Filter
 # End of mandatory metadata
 
@@ -21,7 +21,7 @@ hasProcessingProvider=no
 # Tags are comma separated with spaces allowed
 tags=OFR
 
-homepage=https://snapwürz.de/
+homepage=https://xn--snapwrz-r2a.de/
 category=Plugins
 icon=icon.png
 # experimental flag
@@ -35,7 +35,7 @@ deprecated=False
 # Check the documentation for more information.
 # plugin_dependencies=
 
-Category of the plugin: Raster, Vector, Database or Web
+#Category of the plugin: Raster, Vector, Database or Web
 # category=
 
 # If the plugin can run on QGIS Server.
