@@ -27,7 +27,7 @@ from qgis.PyQt.QtWidgets import QAction, QMessageBox, QPushButton, QDialog, QVBo
 from qgis.core import (
     QgsProject, QgsVectorLayer, QgsWkbTypes, QgsVectorFileWriter, QgsSpatialIndex, 
     QgsCoordinateTransform, QgsFeature, QgsRectangle, QgsFeatureRequest, 
-    QgsSymbol, QgsGraduatedSymbolRenderer, QgsRendererRange
+    QgsSymbol, QgsGraduatedSymbolRenderer, QgsRendererRange, QgsGeometry
 )
 from qgis.utils import iface
 from PyQt5.QtGui import QColor
@@ -1173,6 +1173,8 @@ class OFEFilter:
     ### Attribute anfügen ###
     #########################
     
+
+
     def attribute_anfügen(self, new_layer):
         # 1. Aktuell ausgewählter Polygon-Layer
         parzellen_layer = self.dlg.mMapLayerComboBox_Parzellen.currentLayer()
@@ -1187,6 +1189,19 @@ class OFEFilter:
             QMessageBox.warning(self.dlg, "Hinweis", "Bitte wähle mindestens ein Attribut aus.")
             return
 
+        # 2.1 CRS prüfen + ggf. Transform vorbereiten (parzellen_layer -> new_layer)
+        src_crs = parzellen_layer.crs()
+        dst_crs = new_layer.crs()
+
+        needs_transform = (src_crs != dst_crs)
+        xform = None
+        if needs_transform:
+            xform = QgsCoordinateTransform(
+                src_crs,
+                dst_crs,
+                QgsProject.instance().transformContext()
+            )
+
         # 3. Bearbeitung starten
         if not new_layer.isEditable():
             new_layer.startEditing()
@@ -1197,8 +1212,11 @@ class OFEFilter:
 
         for field_name in selected_fields:
             if field_name not in existing_field_names:
+                # Original-Logik beibehalten (field() by name)
                 field_def = parzellen_layer.fields().field(field_name)
-                new_fields.append(field_def)
+                # Schutz: falls Feld nicht existiert
+                if field_def is not None and field_def.name():
+                    new_fields.append(field_def)
 
         if new_fields:
             new_layer.dataProvider().addAttributes(new_fields)
@@ -1222,6 +1240,17 @@ class OFEFilter:
         # 7. Durch jedes Polygon gehen
         for polygon_feature in parzellen_layer.getFeatures():
             poly_geom = polygon_feature.geometry()
+            if not poly_geom or poly_geom.isEmpty():
+                continue
+
+            # Polygon-Geometrie bei CRS-Abweichung ins CRS vom new_layer transformieren
+            if needs_transform:
+                poly_geom = QgsGeometry(poly_geom)  # sichere Kopie, transform() arbeitet in-place
+                res = poly_geom.transform(xform)
+                if res != 0:
+                    # Transform fehlgeschlagen -> Polygon überspringen
+                    continue
+
             candidate_ids = spatial_index.intersects(poly_geom.boundingBox())
 
             for fid in candidate_ids:
@@ -1230,13 +1259,17 @@ class OFEFilter:
                     continue
 
                 point_geom = point_feature.geometry()
+                if not point_geom or point_geom.isEmpty():
+                    continue
 
                 if poly_geom.contains(point_geom):
                     point_id = point_feature.id()
 
                     for field_name in selected_fields:
                         value = polygon_feature[field_name]
-                        field_index = field_indexes[field_name]
+                        field_index = field_indexes.get(field_name, -1)
+                        if field_index == -1:
+                            continue
                         new_layer.changeAttributeValue(point_id, field_index, value)
 
         # 8. Änderungen speichern
