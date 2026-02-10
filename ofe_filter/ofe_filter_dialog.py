@@ -41,6 +41,7 @@ import itertools
 import uuid
 from .ofe_LogManager import LogManager as log
 from .ofe_ueberlappung import UeberlappungFilter
+from configparser import ConfigParser
 
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
@@ -53,9 +54,26 @@ class OFEFilterDialog(QtWidgets.QDialog, FORM_CLASS):
         """Initialisiert den Dialog und verknüpft GUI-Elemente mit Funktionen."""
         super(OFEFilterDialog, self).__init__(parent)
 
-        # Informationen für Logging
-        self.plugin_name = "OFE_Filter"
-        self.plugin_version = "0.0.4"
+        # Informationen für Logging (aus metadata.txt)
+        meta_path = os.path.join(os.path.dirname(__file__), "metadata.txt")
+        if not os.path.isfile(meta_path):
+            raise FileNotFoundError(f"metadata.txt nicht gefunden: {meta_path}")
+
+        cfg = ConfigParser()
+        with open(meta_path, encoding="utf-8") as f:
+            cfg.read_file(f)
+
+        if not cfg.has_section("general"):
+            raise KeyError("Sektion [general] fehlt in metadata.txt")
+
+        if not cfg.has_option("general", "name"):
+            raise KeyError("Key 'name' fehlt in [general] der metadata.txt")
+        if not cfg.has_option("general", "version"):
+            raise KeyError("Key 'version' fehlt in [general] der metadata.txt")
+
+        self.plugin_name = cfg.get("general", "name").strip()
+        self.plugin_version = cfg.get("general", "version").strip()
+
         self.anzahl_punkte = None
 
         self.setupUi(self)
