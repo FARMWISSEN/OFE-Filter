@@ -2,7 +2,7 @@
 name=OFE-Filter
 qgisMinimumVersion=3.0
 description=Filtering Point Data for On-Farm Experiments
-version=0.1.2
+version=0.1.3
 author=Sebastian Ramm; Till Grabo
 email=sebastian.ramm@haw-kiel.de
 
