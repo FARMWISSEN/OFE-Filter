@@ -6,7 +6,7 @@ version=0.1.3
 author=Sebastian Ramm; Till Grabo
 email=sebastian.ramm@haw-kiel.de
 
-about=Filtering Point Data for On-Farm Experiments
+about=Das OFE Filter Plugin ist das zweite Plugin im OFE-Werkzeugkasten der OG SNaPwürZ. Es unterstützt dich in QGIS beim Bereinigen und Filtern von Punktdatensätzen, wie sie in On-Farm-Experimenten anfallen (z. B. Ertragsdaten). Dazu gehören räumliche Zuschnitte über Polygonflächen (z.B. Feldgrenze oder Parzellen), Ausreißerfilter (Unter-/Obergrenze, Standardabweichung), das manuelle Entfernen von Punkten sowie die Übertragung von Parzellenattributen (z.B. Versuchsvariante, Block).
 
 tracker=https://github.com/FARMWISSEN/OFE-Filter/issues
 repository=https://github.com/FARMWISSEN/OFE-Filter
@@ -16,10 +16,20 @@ repository=https://github.com/FARMWISSEN/OFE-Filter
 
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
-# changelog=
+changelog=0.1.3
+ [BUG] Parzellen-Attribute übertragen (#1)
+  - CRS-Handling ergänzt: Wenn parzellen_layer und new_layer unterschiedliche CRS haben, werden Polygon-Geometrien on-the-fly ins CRS des new_layer transformiert (QgsCoordinateTransform).
+  - Robuster gegen Problemfälle: Leere/ungültige Polygon-Geometrien sowie fehlgeschlagene Transformationen werden übersprungen, ohne den Prozess abzubrechen.
+  - Nutzerfeedback hinzugefügt: Am Ende wird eine Warnung ausgegeben, falls Polygone übersprungen wurden (inkl. Zähler für leere Geometrien/Transform-Fehler).
+  - Transparenz der Verarbeitung: Es werden Kennzahlen ausgegeben (verarbeitete Polygone, aktualisierte Punkte, übersprungene Features).
+  - Bestehende Funktionalität bleibt erhalten: Feld-Ergänzung, Spatial Index, Attributübertragung, Commit, Extents/Repaint und Combobox-Refresh wie zuvor.
+ [BUG] Version in Log-Datei (#12)
+  - Versions- und Pluginname nicht mehr hartcodiert, sondern aus metadata.txt ([general] name/version) ausgelesen.
+  - Hilfsfunktion zum Laden der Metadaten ergänzt und im Dialog-Init verwendet.
+  - Strengere Fehlerbehandlung: Plugin-Start bricht ab, wenn metadata.txt fehlt oder Einträge nicht vorhanden sind.
 
 # Tags are comma separated with spaces allowed
-tags=OFR
+tags=OFE, OFR
 
 homepage=https://xn--snapwrz-r2a.de/
 category=Vector
