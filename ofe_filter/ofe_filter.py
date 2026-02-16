@@ -27,7 +27,7 @@ from qgis.PyQt.QtWidgets import QAction, QMessageBox, QPushButton, QDialog, QVBo
 from qgis.core import (
     QgsProject, QgsVectorLayer, QgsWkbTypes, QgsVectorFileWriter, QgsSpatialIndex, 
     QgsCoordinateTransform, QgsFeature, QgsRectangle, QgsFeatureRequest, 
-    QgsSymbol, QgsGraduatedSymbolRenderer, QgsRendererRange
+    QgsSymbol, QgsGraduatedSymbolRenderer, QgsRendererRange, QgsGeometry
 )
 from qgis.utils import iface
 from PyQt5.QtGui import QColor
@@ -1173,6 +1173,9 @@ class OFEFilter:
     ### Attribute anfügen ###
     #########################
     
+
+
+
     def attribute_anfügen(self, new_layer):
         # 1. Aktuell ausgewählter Polygon-Layer
         parzellen_layer = self.dlg.mMapLayerComboBox_Parzellen.currentLayer()
@@ -1187,6 +1190,19 @@ class OFEFilter:
             QMessageBox.warning(self.dlg, "Hinweis", "Bitte wähle mindestens ein Attribut aus.")
             return
 
+        # 2.1 CRS prüfen + ggf. Transform vorbereiten (parzellen_layer -> new_layer)
+        src_crs = parzellen_layer.crs()
+        dst_crs = new_layer.crs()
+
+        needs_transform = (src_crs != dst_crs)
+        xform = None
+        if needs_transform:
+            xform = QgsCoordinateTransform(
+                src_crs,
+                dst_crs,
+                QgsProject.instance().transformContext()
+            )
+
         # 3. Bearbeitung starten
         if not new_layer.isEditable():
             new_layer.startEditing()
@@ -1198,7 +1214,9 @@ class OFEFilter:
         for field_name in selected_fields:
             if field_name not in existing_field_names:
                 field_def = parzellen_layer.fields().field(field_name)
-                new_fields.append(field_def)
+                # Schutz: falls Feld nicht existiert
+                if field_def is not None and field_def.name():
+                    new_fields.append(field_def)
 
         if new_fields:
             new_layer.dataProvider().addAttributes(new_fields)
@@ -1219,9 +1237,30 @@ class OFEFilter:
             for field_name in selected_fields
         }
 
+        # ---- Zähler für Nutzerhinweise ----
+        total_polygons = 0
+        skipped_empty_geom = 0
+        skipped_transform_fail = 0
+        updated_points = 0
+        # ----------------------------------
+
         # 7. Durch jedes Polygon gehen
         for polygon_feature in parzellen_layer.getFeatures():
+            total_polygons += 1
+
             poly_geom = polygon_feature.geometry()
+            if not poly_geom or poly_geom.isEmpty():
+                skipped_empty_geom += 1
+                continue
+
+            # Polygon-Geometrie bei CRS-Abweichung ins CRS vom new_layer transformieren
+            if needs_transform:
+                poly_geom = QgsGeometry(poly_geom)  # sichere Kopie, transform() arbeitet in-place
+                res = poly_geom.transform(xform)
+                if res != 0:
+                    skipped_transform_fail += 1
+                    continue
+
             candidate_ids = spatial_index.intersects(poly_geom.boundingBox())
 
             for fid in candidate_ids:
@@ -1230,23 +1269,44 @@ class OFEFilter:
                     continue
 
                 point_geom = point_feature.geometry()
+                if not point_geom or point_geom.isEmpty():
+                    continue
 
                 if poly_geom.contains(point_geom):
                     point_id = point_feature.id()
 
                     for field_name in selected_fields:
+                        field_index = field_indexes.get(field_name, -1)
+                        if field_index == -1:
+                            continue
                         value = polygon_feature[field_name]
-                        field_index = field_indexes[field_name]
                         new_layer.changeAttributeValue(point_id, field_index, value)
+
+                    updated_points += 1
 
         # 8. Änderungen speichern
         if not new_layer.commitChanges():
             QMessageBox.critical(self.dlg, "Fehler", "Änderungen konnten nicht gespeichert werden!")
+            return
+
+        new_layer.updateExtents()
+        new_layer.triggerRepaint()
+        self.dlg.populate_attribut_combobox(new_layer)
+
+        # Nutzerhinweis, falls etwas übersprungen wurde
+        skipped_total = skipped_empty_geom + skipped_transform_fail
+        if skipped_total > 0:
+            msg = (
+                "Attribute übertragen – mit Hinweisen:\n\n"
+                f"- Aktualisierte Punkte: {updated_points}\n"
+                f"- Verarbeitete Polygone: {total_polygons}\n"
+                f"- Übersprungen (leere/ungültige Geometrie): {skipped_empty_geom}\n"
+                f"- Übersprungen (CRS-Transformation fehlgeschlagen): {skipped_transform_fail}\n\n"
+                "Hinweis: Übersprungene Polygone konnten nicht für die Zuordnung verwendet werden."
+            )
+            QMessageBox.warning(self.dlg, "Hinweis", msg)
         else:
-            new_layer.updateExtents()
-            new_layer.triggerRepaint()
-            self.dlg.populate_attribut_combobox(new_layer)
-            QMessageBox.information(self.dlg, 'Erfolg', 'Attribute erfolgreich übertragen.')                
+            QMessageBox.information(self.dlg, "Erfolg", "Attribute erfolgreich übertragen.")                
   
     def point_selection(self, new_layer):
         """Aktiviert das eingebaute Werkzeug 'Objekte über Polygon wählen' und zeigt ein 
