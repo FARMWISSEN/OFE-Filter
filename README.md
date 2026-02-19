@@ -24,10 +24,9 @@ Das OFE Filter Plugin ist das zweite Plugin im OFE-Werkzeugkasten der OG SNaPwü
 
 ## 🎯 Überblick
 
-Mit dem OFE Filter erstellst du aus einem bestehenden Punkt-Layer eine gefilterte Kopie (Shapefile) und kannst diese anschließend:
+Mit dem OFE Filter erstellst du aus einem bestehenden Punkt-Layer eine Kopie (Shapefile) und kannst diese anschließend:
 
 - räumlich zuschneiden (Feldgrenze / Innenfläche / Parzellen),
-- Punkte in Ausschlussflächen entfernen,
 - Ausreißer anhand von Attributwerten selektieren,
 - Punkte manuell selektieren und löschen,
 - Parzellenattribute in den Punktdatensatz übernehmen,
@@ -77,13 +76,14 @@ Die Ergebnisse werden im Projekt abgelegt und in QGIS in einer eigenen Layergrup
 | **Obergrenze** | Selektiert Werte oberhalb einer Schwelle (`>` oder `≥`) | numerisch |
 | **Standardabweichung** | Selektiert Ausreißer über Mittelwert ± (Multiplikator × SD); Methode: beidseitig / nur unten / nur oben | numerisch |
 
-> Die selektierten Punkte werden im Layer markiert (Selektion). Je nach Workflow können sie anschließend gelöscht oder weiterbearbeitet werden.
 
 ---
 
 ## 🧩 Installation
 
 ### Option A (empfohlen): Installation über QGIS-Plugin-Repository (Auto-Updates)
+> Hier gehts zum ausführlichen Tutorial: [Installation der SNaPWürZ Plugins für QGIS](https://farmwiki.de/de/Tutorials/GIS/QGIS/installation_snapwuerz_plugin)
+
 1. QGIS öffnen
 2. **Erweiterungen → Erweiterungen verwalten und installieren…**
 3. Reiter **Einstellungen**
@@ -110,6 +110,7 @@ Diese Variante ist für Entwickler gedacht.
 
 ### Python-Abhängigkeiten
 Das Plugin benötigt zusätzliche Python-Module: pandas und matplotlib (siehe `metadata.txt`).
+> Hier gehts zum ausführlichen Tutorial: [Installation von Python-Paketen in der Python-Umgebung von QGIS](https://farmwiki.de/de/Tutorials/GIS/QGIS/installation_python_pakete_qgis)
 
 **Windows (OSGeo4W Shell):**
 ```bash
